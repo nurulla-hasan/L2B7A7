@@ -1,57 +1,61 @@
-import Image from "next/image";
 import Link from "next/link";
-
+import { GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Logo({
   className,
   size = "md",
-  showText = false,
+  showText = true,
   showTextOnMobile = false,
+  href = "/",
 }: {
   className?: string;
   size?: "sm" | "md" | "lg";
   showText?: boolean;
-  /** Set true to show the text on mobile too (default: hidden on mobile) */
   showTextOnMobile?: boolean;
+  href?: string;
 }) {
-  const pixelSize = size === "lg" ? 48 : size === "md" ? 40 : 32;
+  const iconSize = size === "lg" ? "size-6" : size === "md" ? "size-5" : "size-4";
+  const boxSize = size === "lg" ? "size-10" : size === "md" ? "size-9" : "size-7";
 
   return (
     <Link
-      href="/"
+      href={href}
       className={cn(
-        "inline-flex items-end gap-3 font-semibold tracking-tight",
-        className,
+        "inline-flex items-center gap-2.5 font-semibold tracking-tight transition-opacity hover:opacity-90",
+        className
       )}
     >
-      <Image
-        src="/assets/logo.png"
-        alt="Mouza Map Pro"
-        width={0}
-        height={0}
-        sizes={`${pixelSize}px`}
+      <div
         className={cn(
-          "block h-auto w-auto rounded-lg object-contain",
-          size === "lg" && "max-h-12",
-          size === "md" && "max-h-10",
-          size === "sm" && "max-h-8",
+          "flex shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-primary/20",
+          boxSize
         )}
-      />
+      >
+        <GraduationCap className={iconSize} />
+      </div>
+
       {showText && (
-        <span
+        <div
           className={cn(
-            showTextOnMobile
-              ? "block"
-              : "hidden sm:block",
-            "bg-linear-to-r from-primary to-yellow-500 bg-clip-text text-transparent font-heading font-bold tracking-tight",
-            size === "lg" && "text-xl",
-            size === "md" && "text-lg",
-            size === "sm" && "text-base",
+            showTextOnMobile ? "flex flex-col" : "hidden sm:flex flex-col",
+            "leading-none"
           )}
         >
-          মৌজা ম্যাপ প্রো
-        </span>
+          <span
+            className={cn(
+              "font-bold tracking-tight text-foreground",
+              size === "lg" && "text-lg",
+              size === "md" && "text-base",
+              size === "sm" && "text-sm"
+            )}
+          >
+            UniPortal
+          </span>
+          <span className="text-[10px] text-muted-foreground font-normal tracking-wider uppercase">
+            Academic System
+          </span>
+        </div>
       )}
     </Link>
   );

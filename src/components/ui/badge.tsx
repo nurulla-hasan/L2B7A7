@@ -41,6 +41,9 @@ const badgeVariants = cva(
         blocked:
           "bg-rose-500/15 text-rose-700 border-rose-500/20 hover:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30",
 
+        warning:
+          "bg-yellow-500/15 text-yellow-700 border-yellow-500/20 hover:bg-yellow-500/20 dark:text-yellow-400 dark:border-yellow-500/30",
+
         rejected:
           "bg-red-500/15 text-red-700 border-red-500/20 hover:bg-red-500/20 dark:text-red-400 dark:border-red-500/30",
 
