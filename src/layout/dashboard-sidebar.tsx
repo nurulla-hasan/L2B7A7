@@ -1,8 +1,10 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
+import { useLogout } from "@/services";
+import { addToast } from "@/lib/toast";
 
 import {
   Sidebar,
@@ -17,7 +19,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/common/logo";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   adminNavigation,
@@ -28,64 +29,70 @@ import {
 
 export function DashboardSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { mutate: logout, isPending: isLoggingOut } = useLogout();
 
-  // Determine role based on route pathname
-  const role: "ADMIN" | "TEACHER" | "STUDENT" = pathname.startsWith("/teacher")
-    ? "TEACHER"
-    : pathname.startsWith("/student")
-    ? "STUDENT"
-    : "ADMIN";
+  const handleLogout = () => {
+    logout(undefined, {
+      onSuccess: () => {
+        addToast({
+          title: "Logged Out",
+          description: "You have been safely signed out.",
+          type: "success",
+        });
+        router.replace("/login");
+      },
+      onError: () => {
+        router.replace("/login");
+      },
+    });
+  };
 
-  const roleMeta = {
-    ADMIN: {
-      portalTitle: "Admin Portal",
-      badgeVariant: "admin" as const,
-      navItems: adminNavigation,
-    },
-    TEACHER: {
-      portalTitle: "Faculty Portal",
-      badgeVariant: "manager" as const,
-      navItems: teacherNavigation,
-    },
-    STUDENT: {
-      portalTitle: "Student Portal",
-      badgeVariant: "success" as const,
-      navItems: studentNavigation,
-    },
-  }[role];
-
-  const isItemActive = (item: NavigationItem) => {
-    // If it's a dashboard root like /admin/dashboard
-    if (
-      item.href === "/admin/dashboard" ||
-      item.href === "/teacher/dashboard" ||
-      item.href === "/student/dashboard"
-    ) {
-      return pathname === item.href;
+  // Get portal title and navigation items based on current route
+  const getPortalInfo = () => {
+    if (pathname.startsWith("/teacher")) {
+      return {
+        title: "Faculty Portal",
+        navItems: teacherNavigation,
+      };
     }
-    return pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+    if (pathname.startsWith("/student")) {
+      return {
+        title: "Student Portal",
+        navItems: studentNavigation,
+      };
+    }
+
+    return {
+      title: "Admin Portal",
+      navItems: adminNavigation,
+    };
+  };
+
+  const { title: portalTitle, navItems } = getPortalInfo();
+
+  // Check if navigation item is currently active
+  const isItemActive = (item: NavigationItem) => {
+    if (pathname === item.href) return true;
+    if (item.href.endsWith("/dashboard")) return false;
+    return pathname.startsWith(`${item.href}/`);
   };
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="h-16 border-b px-4 flex flex-row items-center justify-between">
         <Logo size="md" showText showTextOnMobile />
-        <Badge
-          variant={roleMeta.badgeVariant}
-          className="group-data-[collapsible=icon]:hidden text-[10px] tracking-wide uppercase font-semibold"
-        >
-          {role}
-        </Badge>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
-            {roleMeta.portalTitle}
+            {portalTitle}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
-              {roleMeta.navItems.map((item) => {
+              {navItems.map((item) => {
                 const active = isItemActive(item);
                 return (
                   <SidebarMenuItem key={item.href}>
@@ -115,10 +122,12 @@ export function DashboardSidebar() {
         <Button
           variant="outline"
           size="sm"
-          // onClick={handleLogout}
+          onClick={handleLogout}
+          loading={isLoggingOut}
+          loadingText="Signing Out..."
           className="w-full justify-start gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
         >
-          <LogOut className="size-4 shrink-0" />
+          <LogOut />
           <span className="group-data-[collapsible=icon]:hidden">Sign Out</span>
         </Button>
       </SidebarFooter>
