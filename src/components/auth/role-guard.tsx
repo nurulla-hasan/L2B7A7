@@ -1,6 +1,6 @@
 "use client";
 
-import { useGetMe } from "@/hooks";
+import { useGetMe } from "@/services";
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
 import AuthLoading from "./auth-loading";
@@ -17,7 +17,7 @@ export default function RoleGuard({ children, roles }: IProps) {
 
   const { data, isPending, isError } = useGetMe();
 
-  const user = data?.data;
+  const user = data?.data?.user;
 
   const isAuthorized = !!user && roles.includes(user.role);
 
