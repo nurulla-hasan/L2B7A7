@@ -1,0 +1,164 @@
+"use client";
+
+import * as React from "react";
+import { SectionHeading } from "@/components/common/section-heading";
+import { SearchInput } from "@/components/common/search-input";
+import { DataTable } from "@/components/common/data-table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useStateFilter } from "@/hooks";
+import { useGetCourses } from "@/services";
+import { getErrorMessage } from "@/lib/error";
+import type { CourseSortBy } from "@/types";
+import { courseColumns } from "./course-column";
+import { CourseModal } from "./course-modal";
+
+const CREDIT_OPTIONS = ["all", "0.5", "1", "1.5", "2", "3", "4", "6"];
+
+const SORT_OPTIONS: { label: string; value: CourseSortBy }[] = [
+  { label: "Newest First", value: "newest" },
+  { label: "Oldest First", value: "oldest" },
+  { label: "Credits (High to Low)", value: "credits_desc" },
+  { label: "Credits (Low to High)", value: "credits_asc" },
+  { label: "Title (A-Z)", value: "title_asc" },
+  { label: "Title (Z-A)", value: "title_desc" },
+  { label: "Code (A-Z)", value: "code_asc" },
+  { label: "Code (Z-A)", value: "code_desc" },
+];
+
+export default function CoursesList() {
+  const filter = useStateFilter<string>({
+    paginationKey: "page",
+    initialValues: {
+      page: 1,
+      limit: 10,
+      sortBy: "newest",
+    },
+  });
+
+  const queryParams = React.useMemo(() => {
+    const raw = filter.filters;
+    return {
+      page: raw.page ? Number(raw.page) : 1,
+      limit: raw.limit ? Number(raw.limit) : 10,
+      searchTerm: raw.searchTerm || undefined,
+      credits: raw.credits ? Number(raw.credits) : undefined,
+      sortBy: (raw.sortBy as CourseSortBy) || "newest",
+    };
+  }, [filter.filters]);
+
+  const {
+    data: response,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useGetCourses(queryParams);
+
+  const courses = response?.data ?? [];
+  const meta = response?.meta;
+
+  const currentCreditValue = filter.getFilter("credits") || "all";
+  const currentSortValue =
+    (filter.getFilter("sortBy") as CourseSortBy) || "newest";
+
+  const handleCreditChange = (value: string | null) => {
+    if (!value || value === "all") {
+      filter.updateFilter("credits", null);
+    } else {
+      filter.updateFilter("credits", Number(value));
+    }
+  };
+
+  const handleSortChange = (value: string | null) => {
+    if (value) {
+      filter.updateFilter("sortBy", value);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <SectionHeading
+        title="Courses Management"
+        description="Create, organize and manage university academic courses, credit hours, and syllabi."
+        alignment="left"
+        as="h3"
+      >
+        <CourseModal mode="create" />
+      </SectionHeading>
+
+      {/* Filters row */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="w-full sm:max-w-xs">
+          <SearchInput
+            filter={filter}
+            filterKey="searchTerm"
+            debounce={500}
+            placeholder="Search course title or code..."
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Credits Filter */}
+          <Select value={currentCreditValue} onValueChange={handleCreditChange}>
+            <SelectTrigger className="w-36 cursor-pointer">
+              <SelectValue placeholder="Credits">
+                {(val) =>
+                  val === "all" || !val ? "All Credits" : `${val} Credits`
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent align="end">
+              {CREDIT_OPTIONS.map((cr) => (
+                <SelectItem key={cr} value={cr} className="cursor-pointer">
+                  {cr === "all" ? "All Credits" : `${cr} Credits`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Sort By Filter */}
+          <Select value={currentSortValue} onValueChange={handleSortChange}>
+            <SelectTrigger className="min-w-48 cursor-pointer">
+              <SelectValue placeholder="Sort by">
+                {(val) =>
+                  SORT_OPTIONS.find((opt) => opt.value === val)?.label ||
+                  "Newest First"
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent align="end">
+              {SORT_OPTIONS.map((opt) => (
+                <SelectItem
+                  key={opt.value}
+                  value={opt.value}
+                  className="cursor-pointer"
+                >
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <DataTable
+        columns={courseColumns}
+        data={courses}
+        meta={meta}
+        filter={filter}
+        isLoading={isLoading}
+        isFetching={isFetching}
+        isError={isError}
+        errorMessage={getErrorMessage(error, "Failed to load courses")}
+        onRetry={refetch}
+      />
+    </div>
+  );
+}

@@ -29,6 +29,9 @@ interface BaseFormInputProps {
     | "decimal"
     | "search";
   maxLength?: number;
+  step?: string | number;
+  min?: string | number;
+  max?: string | number;
   className?: string;
 }
 
@@ -57,6 +60,9 @@ function FormInputField({
   disabled,
   inputMode,
   maxLength,
+  step,
+  min,
+  max,
   className,
 }: BaseFormInputProps & {
   field: AnyFieldApi;
@@ -111,9 +117,20 @@ function FormInputField({
             id={field.name}
             name={field.name}
             type={type}
-            value={(field.state.value as string) ?? ""}
+            step={step}
+            min={min}
+            max={max}
+            value={(field.state.value as string | number) ?? ""}
             onBlur={field.handleBlur}
-            onChange={(e) => field.handleChange(e.target.value)}
+            onChange={(e) =>
+              field.handleChange(
+                type === "number"
+                  ? e.target.value === ""
+                    ? ""
+                    : Number(e.target.value)
+                  : e.target.value
+              )
+            }
             placeholder={placeholder}
             autoComplete={autoComplete}
             disabled={disabled}
