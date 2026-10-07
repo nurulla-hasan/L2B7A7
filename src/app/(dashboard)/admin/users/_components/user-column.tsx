@@ -26,40 +26,51 @@ import { formatDate } from "@/lib/utils";
 
 function UserActionsCell({ user }: { user: UserItem }) {
   const [isStatusModalOpen, setIsStatusModalOpen] = React.useState(false);
-  const statusMutation = useUpdateUserStatus();
-  const roleMutation = useUpdateUserRole();
+  const { mutate: updateStatus, isPending: isUpdatingStatus } =
+    useUpdateUserStatus();
+  const { mutate: updateRole, isPending: isUpdatingRole } = useUpdateUserRole();
 
-  const handleConfirmStatusChange = async () => {
+  const handleConfirmStatusChange = () => {
     const nextStatus = user.status === "ACTIVE" ? "BLOCKED" : "ACTIVE";
-    try {
-      await statusMutation.mutateAsync({
+    updateStatus(
+      {
         id: user.id,
         payload: { status: nextStatus },
-      });
-      successToast(
-        "User status updated",
-        `${user.name} has been ${nextStatus === "ACTIVE" ? "activated" : "blocked"}.`,
-      );
-      setIsStatusModalOpen(false);
-    } catch (error) {
-      errorToast(getErrorMessage(error, "Failed to update user status"));
-    }
+      },
+      {
+        onSuccess: () => {
+          successToast(
+            "User status updated",
+            `${user.name} has been ${nextStatus === "ACTIVE" ? "activated" : "blocked"}.`,
+          );
+          setIsStatusModalOpen(false);
+        },
+        onError: (error) => {
+          errorToast(getErrorMessage(error, "Failed to update user status"));
+        },
+      },
+    );
   };
 
-  const handleRoleChange = async (role: UserRole) => {
+  const handleRoleChange = (role: UserRole) => {
     if (role === user.role) return;
-    try {
-      await roleMutation.mutateAsync({
+    updateRole(
+      {
         id: user.id,
         payload: { role },
-      });
-      successToast(
-        "User role updated",
-        `${user.name}'s role changed to ${role}.`,
-      );
-    } catch (error) {
-      errorToast(getErrorMessage(error, "Failed to update user role"));
-    }
+      },
+      {
+        onSuccess: () => {
+          successToast(
+            "User role updated",
+            `${user.name}'s role changed to ${role}.`,
+          );
+        },
+        onError: (error) => {
+          errorToast(getErrorMessage(error, "Failed to update user role"));
+        },
+      },
+    );
   };
 
   return (
@@ -86,7 +97,7 @@ function UserActionsCell({ user }: { user: UserItem }) {
                 {(["ADMIN", "TEACHER", "STUDENT"] as const).map((role) => (
                   <DropdownMenuItem
                     key={role}
-                    disabled={user.role === role || roleMutation.isPending}
+                    disabled={user.role === role || isUpdatingRole}
                     onClick={() => handleRoleChange(role)}
                     className="flex items-center justify-between cursor-pointer"
                   >
@@ -132,7 +143,7 @@ function UserActionsCell({ user }: { user: UserItem }) {
         }`}
         confirmText={user.status === "ACTIVE" ? "Block User" : "Activate User"}
         variant={user.status === "ACTIVE" ? "destructive" : "default"}
-        isLoading={statusMutation.isPending}
+        isLoading={isUpdatingStatus}
         onConfirm={handleConfirmStatusChange}
       />
     </div>

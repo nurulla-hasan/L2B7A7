@@ -52,6 +52,14 @@ const CustomCalendar = ({
     end: endOfYear(endDate),
   });
 
+  const [prevSelected, setPrevSelected] = useState(selected);
+  if (selected !== prevSelected) {
+    setPrevSelected(selected);
+    if (selected) {
+      setMonth(selected);
+    }
+  }
+
   useEffect(() => {
     if (!onClose) return;
     const close = onClose;

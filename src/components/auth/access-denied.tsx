@@ -4,8 +4,14 @@ import Link from "next/link";
 import { ShieldAlert, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useGetMe } from "@/services";
+import { getDashboardPathByRole } from "@/constants/routes";
 
 export default function AccessDenied() {
+  const { data } = useGetMe();
+  const user = data?.data?.user;
+  const returnHref = getDashboardPathByRole(user?.role);
+
   return (
     <div className="min-h-[60vh] flex items-center justify-center p-4">
       <Card className="max-w-md w-full text-center shadow-md">
@@ -19,8 +25,8 @@ export default function AccessDenied() {
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-2">
-          <Button variant="default" className="w-full" render={<Link href="/admin/dashboard" />}>
-            <ArrowLeft className="size-4 mr-2" /> Return to Overview
+          <Button variant="default" className="w-full" render={<Link href={returnHref} />}>
+            <ArrowLeft className="size-4 mr-2" /> Return to Dashboard
           </Button>
         </CardContent>
       </Card>
