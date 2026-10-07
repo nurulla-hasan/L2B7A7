@@ -12,6 +12,7 @@ import {
   resetPassword,
   updateMe,
   verifyEmail,
+  verifyResetOtp,
 } from "../api/auth.api";
 
 export function useGetMe() {
@@ -91,6 +92,12 @@ export function useForgotPassword() {
 export function useResendResetOtp() {
   return useMutation({
     mutationFn: resendResetOtp,
+  });
+}
+
+export function useVerifyResetOtp() {
+  return useMutation({
+    mutationFn: verifyResetOtp,
   });
 }
 

@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useEffect,
-  useCallback,
-  useSyncExternalStore,
-} from "react";
+import { useState, useEffect, useCallback, useSyncExternalStore } from "react";
 
 const emptySubscribe = () => () => {};
 
@@ -76,67 +71,51 @@ export function useDebounce<T>(value: T, delay: number = 300): T {
 export function useCountdown(
   initialSeconds: number,
   storageKey: string = "otp-timer",
+  autoStart: boolean = true,
 ) {
-  const [secondsLeft, setSecondsLeft] = useState<number>(() => {
-    if (typeof window === "undefined") return initialSeconds;
-    const savedTargetTime = localStorage.getItem(storageKey);
-    if (!savedTargetTime) return initialSeconds;
+  const isMounted = useHasMounted();
+  const [targetTime, setTargetTime] = useLocalStorage<number | null>(
+    storageKey,
+    () => (autoStart ? Date.now() + initialSeconds * 1000 : null),
+  );
+  const [now, setNow] = useState(() => Date.now());
 
-    const diff = Math.ceil((parseInt(savedTargetTime, 10) - Date.now()) / 1000);
-    return diff > 0 ? diff : 0;
-  });
+  const remaining = targetTime
+    ? Math.max(0, Math.ceil((targetTime - now) / 1000))
+    : 0;
 
-  const [isRunning, setIsRunning] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    const savedTargetTime = localStorage.getItem(storageKey);
-    if (!savedTargetTime) return false;
-
-    return parseInt(savedTargetTime, 10) > Date.now();
-  });
+  const isRunning = isMounted && targetTime !== null && remaining > 0;
 
   useEffect(() => {
     if (!isRunning) return;
 
     const timerId = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          setIsRunning(false);
-          localStorage.removeItem(storageKey);
-          return 0;
-        }
-        return prev - 1;
-      });
+      setNow(Date.now());
     }, 1000);
 
-    return () => {
-      if (timerId) clearInterval(timerId);
-    };
-  }, [isRunning, storageKey]);
+    return () => clearInterval(timerId);
+  }, [isRunning]);
 
   const start = useCallback(() => {
-    const targetTime = Date.now() + initialSeconds * 1000;
-    localStorage.setItem(storageKey, targetTime.toString());
-
-    setSecondsLeft(initialSeconds);
-    setIsRunning(true);
-  }, [initialSeconds, storageKey]);
+    const nextTarget = Date.now() + initialSeconds * 1000;
+    setNow(Date.now());
+    setTargetTime(nextTarget);
+  }, [initialSeconds, setTargetTime]);
 
   const reset = useCallback(() => {
-    localStorage.removeItem(storageKey);
-    setIsRunning(false);
-    setSecondsLeft(0);
-  }, [storageKey]);
+    setTargetTime(null);
+  }, [setTargetTime]);
 
-  const formatTime = () => {
-    const minutes = Math.floor(secondsLeft / 60);
-    const seconds = secondsLeft % 60;
-    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  };
+  const displaySeconds = isRunning ? remaining : initialSeconds;
+  const minutes = Math.floor(displaySeconds / 60);
+  const seconds = displaySeconds % 60;
+  const formattedTime = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 
   return {
-    secondsLeft: formatTime(),
-    rawSeconds: secondsLeft,
+    secondsLeft: formattedTime,
+    rawSeconds: displaySeconds,
     isRunning,
+    isMounted,
     start,
     reset,
   };
@@ -145,15 +124,25 @@ export function useCountdown(
 /**
  * Hook for interacting with localStorage
  */
-export function useLocalStorage<T>(key: string, initialValue: T) {
+export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
   const [storedValue, setStoredValue] = useState<T>(() => {
-    if (typeof window === "undefined") return initialValue;
+    if (typeof window === "undefined") {
+      return initialValue instanceof Function ? initialValue() : initialValue;
+    }
     try {
       const item = window.localStorage.getItem(key);
-      return item ? (JSON.parse(item) as T) : initialValue;
+      if (item !== null) {
+        return JSON.parse(item) as T;
+      }
+      const initial =
+        initialValue instanceof Function ? initialValue() : initialValue;
+      if (initial !== null && initial !== undefined) {
+        window.localStorage.setItem(key, JSON.stringify(initial));
+      }
+      return initial;
     } catch (error) {
       console.error(error);
-      return initialValue;
+      return initialValue instanceof Function ? initialValue() : initialValue;
     }
   });
 
@@ -165,7 +154,11 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       setStoredValue(valueToStore);
 
       if (typeof window !== "undefined") {
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        if (valueToStore === null || valueToStore === undefined) {
+          window.localStorage.removeItem(key);
+        } else {
+          window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        }
       }
     } catch (error) {
       console.error(error);

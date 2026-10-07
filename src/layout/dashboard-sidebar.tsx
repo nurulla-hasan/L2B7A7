@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { useLogout } from "@/services";
-import { addToast } from "@/lib/toast";
+import { successToast } from "@/lib/toast";
 
 import {
   Sidebar,
@@ -35,11 +35,7 @@ export function DashboardSidebar() {
   const handleLogout = () => {
     logout(undefined, {
       onSuccess: () => {
-        addToast({
-          title: "Logged Out",
-          description: "You have been safely signed out.",
-          type: "success",
-        });
+        successToast("Logged Out", "You have been safely signed out.");
         router.replace("/login");
       },
       onError: () => {

@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getInitials } from "@/lib/utils";
 import { useGetMe, useLogout } from "@/services";
-import { addToast } from "@/lib/toast";
+import { successToast } from "@/lib/toast";
 
 export function DashboardHeader() {
   const router = useRouter();
@@ -46,11 +46,7 @@ export function DashboardHeader() {
   const handleLogout = () => {
     logout(undefined, {
       onSuccess: () => {
-        addToast({
-          title: "Logged Out",
-          description: "You have been safely signed out.",
-          type: "success",
-        });
+        successToast("Logged Out", "You have been safely signed out.");
         router.replace("/login");
       },
       onError: () => {

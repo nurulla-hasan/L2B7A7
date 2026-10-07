@@ -1,9 +1,7 @@
 import * as React from "react";
 import { toast as sonnerToast, type ExternalToast } from "sonner";
-import { getErrorMessage } from "./error";
 
 export type ToastType = "success" | "error" | "info" | "warning" | "loading" | "default";
-
 
 export interface ToastAddOptions extends Omit<ExternalToast, "description"> {
   title: React.ReactNode;
@@ -12,15 +10,69 @@ export interface ToastAddOptions extends Omit<ExternalToast, "description"> {
 }
 
 /**
- * Reusable object-based toast utility function (camelCase best practice)
+ * Simple success toast
  * Usage:
- * ```ts
- * addToast({
- *   title: "Login Success",
- *   description: "Welcome back",
- *   type: "success",
- * });
- * ```
+ * successToast("Welcome Back");
+ * successToast("Registration Initiated", "Check your email for the code.");
+ */
+export function successToast(
+  message: React.ReactNode,
+  description?: React.ReactNode,
+  options?: ExternalToast
+) {
+  return sonnerToast.success(message, {
+    description,
+    ...options,
+  });
+}
+
+/**
+ * Simple error toast
+ * Usage:
+ * errorToast("Invalid credentials");
+ * errorToast("Registration Failed", getErrorMessage(err));
+ */
+export function errorToast(
+  message: React.ReactNode,
+  description?: React.ReactNode,
+  options?: ExternalToast
+) {
+  return sonnerToast.error(message, {
+    description,
+    ...options,
+  });
+}
+
+/**
+ * Simple info toast
+ */
+export function infoToast(
+  message: React.ReactNode,
+  description?: React.ReactNode,
+  options?: ExternalToast
+) {
+  return sonnerToast.info(message, {
+    description,
+    ...options,
+  });
+}
+
+/**
+ * Simple warning toast
+ */
+export function warningToast(
+  message: React.ReactNode,
+  description?: React.ReactNode,
+  options?: ExternalToast
+) {
+  return sonnerToast.warning(message, {
+    description,
+    ...options,
+  });
+}
+
+/**
+ * Object-based toast utility for structured options
  */
 export function addToast({
   title,
@@ -49,26 +101,5 @@ export function addToast({
   }
 }
 
-// Extended toast object matching standard ecosystem conventions (toast.add, toast.dismiss, etc.)
-export const toast = Object.assign(sonnerToast, {
-  add: addToast,
-});
-
-/**
- * Convenience helper to immediately display an error toast with the extracted error message.
- */
-export function showErrorToast(
-  error: unknown,
-  title = "Action Failed",
-  fallback = "Something went wrong. Please try again."
-) {
-  return addToast({
-    title,
-    description: getErrorMessage(error, fallback),
-    type: "error",
-  });
-}
-
-export { getErrorMessage };
-export default toast;
-
+export const toast = sonnerToast;
+export default sonnerToast;

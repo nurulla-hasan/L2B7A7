@@ -9,7 +9,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/common/form-input";
 import { useRegister } from "@/services";
-import { addToast, showErrorToast } from "@/lib/toast";
+import { successToast, errorToast } from "@/lib/toast";
+import { registerSchema, type RegisterInput } from "@/validations";
+import { getErrorMessage } from "@/lib/error";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -21,7 +23,10 @@ export default function RegisterPage() {
       email: "",
       password: "",
       phone: "",
-      role: "STUDENT" as "STUDENT" | "TEACHER",
+      role: "STUDENT",
+    } as RegisterInput,
+    validators: {
+      onChange: registerSchema,
     },
     onSubmit: ({ value }) => {
       register(
@@ -30,24 +35,19 @@ export default function RegisterPage() {
           email: value.email.trim(),
           password: value.password,
           role: value.role,
-          phone: value.phone.trim() || undefined,
+          phone: value.phone?.trim() || undefined,
         },
         {
           onSuccess: (res) => {
-            addToast({
-              title: "Registration Initiated",
-              description: "A 6-digit verification code has been sent to your email.",
-              type: "success",
-            });
+            successToast(
+              "Registration Initiated",
+              "A 6-digit verification code has been sent to your email."
+            );
             const targetEmail = res.data?.email || value.email.trim();
-            router.push(`/verify-otp?email=${encodeURIComponent(targetEmail)}`);
+            router.push(`/verify-otp?type=signup&email=${encodeURIComponent(targetEmail)}`);
           },
           onError: (err) => {
-            showErrorToast(
-              err,
-              "Registration Failed",
-              "Could not complete registration. Please try again."
-            );
+            errorToast(getErrorMessage(err, "Registration Failed"));
           },
         }
       );
@@ -56,7 +56,7 @@ export default function RegisterPage() {
 
   return (
     <Card>
-      <CardHeader className="text-center space-y-1">
+      <CardHeader className="text-center">
         <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <UserPlus className="size-6" />
         </div>
@@ -76,8 +76,7 @@ export default function RegisterPage() {
           className="space-y-4"
         >
           {/* Account Role Selector */}
-          <div className="grid gap-1.5 mb-2">
-            <label className="text-xs font-medium text-foreground">Select Role</label>
+          <div className="grid gap-1.5 pb-1.5">
             <form.Subscribe selector={(state) => state.values.role}>
               {(role) => (
                 <div className="grid grid-cols-2 gap-2">
@@ -126,7 +125,7 @@ export default function RegisterPage() {
             name="password"
             label="Password"
             type="password"
-            placeholder="Minimum 6 characters"
+            placeholder="Minimum 8 characters"
             autoComplete="new-password"
           />
 
@@ -152,7 +151,7 @@ export default function RegisterPage() {
         </form>
       </CardContent>
 
-      <CardFooter className="flex flex-col gap-2 text-center text-xs text-muted-foreground border-t pt-4">
+      <CardFooter className="flex flex-col gap-2 text-center text-xs">
         <div>
           Already have an account?{" "}
           <Link href="/login" className="text-primary hover:underline font-medium">

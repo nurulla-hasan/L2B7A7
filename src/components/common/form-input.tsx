@@ -61,8 +61,6 @@ function FormInputField({
 }: BaseFormInputProps & {
   field: AnyFieldApi;
 }) {
-  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
-
   const rawErrors = field.state.meta.errors as unknown[] | undefined;
   const errorList = rawErrors?.length
     ? rawErrors.map((err: unknown) =>
@@ -71,6 +69,13 @@ function FormInputField({
           : { message: (err as { message?: string })?.message ?? String(err) }
       )
     : undefined;
+
+  const isInvalid = Boolean(
+    (field.state.meta.isTouched || (field.form?.state.submissionAttempts ?? 0) > 0) &&
+    !field.state.meta.isValid &&
+    errorList &&
+    errorList.length > 0
+  );
 
   return (
     <Field data-invalid={isInvalid} className={className}>

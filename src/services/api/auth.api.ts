@@ -13,6 +13,7 @@ import type {
   UpdateMePayload,
   VerifyEmailPayload,
   VerifyEmailResponse,
+  VerifyResetOtpPayload,
 } from "@/types";
 
 export function loginUser(payload: LoginPayload) {
@@ -70,6 +71,13 @@ export function forgotPassword(payload: ForgotPasswordPayload) {
 
 export function resendResetOtp(payload: ResendResetOtpPayload) {
   return apiClient<ApiResponse<null>>("/auth/resend-reset-otp", {
+    method: "POST",
+    body: payload,
+  });
+}
+
+export function verifyResetOtp(payload: VerifyResetOtpPayload) {
+  return apiClient<ApiResponse<null>>("/auth/verify-reset-otp", {
     method: "POST",
     body: payload,
   });

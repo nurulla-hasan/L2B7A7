@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/common/form-input";
 import { useLogin } from "@/services";
 import { getDashboardPathByRole } from "@/constants/routes";
-import { addToast, showErrorToast } from "@/lib/toast";
+import { successToast, errorToast } from "@/lib/toast";
+import { loginSchema } from "@/validations";
+import { getErrorMessage } from "@/lib/error";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,24 +23,19 @@ export default function LoginPage() {
       email: "",
       password: "",
     },
+    validators: {
+      onChange: loginSchema,
+    },
     onSubmit: ({ value }) => {
       login(value, {
         onSuccess: (res) => {
-          addToast({
-            title: "Login Success",
-            description: "Welcome back",
-            type: "success",
-          });
+          successToast("Welcome Back");
 
           const dashboardPath = getDashboardPathByRole(res.data?.user?.role);
           router.replace(dashboardPath);
         },
         onError: (err) => {
-          showErrorToast(
-            err,
-            "Login Failed",
-            "Invalid credentials. Please try again."
-          );
+          errorToast(getErrorMessage(err, "Login Failed"));
         },
       });
     },
@@ -146,7 +143,7 @@ export default function LoginPage() {
         </div>
       </CardContent>
 
-      <CardFooter className="flex flex-col gap-2 text-center text-xs text-muted-foreground border-t pt-4">
+      <CardFooter className="flex flex-col gap-2 text-center text-xs">
         <div>
           Don&apos;t have an account?{" "}
           <Link href="/register" className="text-primary hover:underline font-medium">
@@ -155,7 +152,7 @@ export default function LoginPage() {
         </div>
         <div>
           Forgot your password?{" "}
-          <Link href="/change-password" className="text-muted-foreground hover:text-foreground hover:underline">
+          <Link href="/forgot-password" className="text-muted-foreground hover:text-foreground hover:underline">
             Reset Password
           </Link>
         </div>

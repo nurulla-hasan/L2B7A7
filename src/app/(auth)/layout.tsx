@@ -56,7 +56,7 @@ export default function AuthLayout({
               <div className="p-1.5 rounded-lg bg-background border border-border text-primary shadow-xs">
                 <CreditCard className="size-4" />
               </div>
-              <span>Automated tuition fee processing via bKash & SSLCOMMERZ</span>
+              <span>Automated tuition fee processing via bKash</span>
             </div>
           </div>
         </div>
