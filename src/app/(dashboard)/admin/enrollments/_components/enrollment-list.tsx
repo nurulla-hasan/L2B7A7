@@ -68,25 +68,6 @@ export default function EnrollmentList() {
   const enrollments = response?.data ?? [];
   const meta = response?.meta;
 
-  const currentSemesterValue = filter.getFilter("semesterId") || "all";
-  const currentStatusValue = filter.getFilter("status") || "all";
-  const currentSortValue =
-    (filter.getFilter("sortBy") as EnrollmentSortBy) || "newest";
-
-  const handleSemesterChange = (value: string | null) => {
-    filter.updateFilter("semesterId", !value || value === "all" ? null : value);
-  };
-
-  const handleStatusChange = (value: string | null) => {
-    filter.updateFilter("status", !value || value === "all" ? null : value);
-  };
-
-  const handleSortChange = (value: string | null) => {
-    if (value) {
-      filter.updateFilter("sortBy", value);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <SectionHeading
@@ -109,7 +90,12 @@ export default function EnrollmentList() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Status Filter */}
-          <Select value={currentStatusValue} onValueChange={handleStatusChange}>
+          <Select
+            value={filter.getFilter("status") || "all"}
+            onValueChange={(val) =>
+              filter.updateFilter("status", !val || val === "all" ? null : val)
+            }
+          >
             <SelectTrigger className="w-40 cursor-pointer">
               <SelectValue placeholder="Status">
                 {(val) =>
@@ -133,8 +119,13 @@ export default function EnrollmentList() {
 
           {/* Semester Filter */}
           <Select
-            value={currentSemesterValue}
-            onValueChange={handleSemesterChange}
+            value={filter.getFilter("semesterId") || "all"}
+            onValueChange={(val) =>
+              filter.updateFilter(
+                "semesterId",
+                !val || val === "all" ? null : val
+              )
+            }
           >
             <SelectTrigger className="w-40 cursor-pointer">
               <SelectValue placeholder="Semester">
@@ -162,7 +153,12 @@ export default function EnrollmentList() {
           </Select>
 
           {/* Sort By Filter */}
-          <Select value={currentSortValue} onValueChange={handleSortChange}>
+          <Select
+            value={(filter.getFilter("sortBy") as EnrollmentSortBy) || "newest"}
+            onValueChange={(val) => {
+              if (val) filter.updateFilter("sortBy", val);
+            }}
+          >
             <SelectTrigger className="min-w-44 cursor-pointer">
               <SelectValue placeholder="Sort by">
                 {(val) =>

@@ -60,24 +60,6 @@ export default function SemestersList() {
   const semesters = response?.data ?? [];
   const meta = response?.meta;
 
-  const currentYearValue = filter.getFilter("year") || "all";
-  const currentSortValue =
-    (filter.getFilter("sortBy") as SemesterSortBy) || "newest";
-
-  const handleYearChange = (value: string | null) => {
-    if (!value || value === "all") {
-      filter.updateFilter("year", null);
-    } else {
-      filter.updateFilter("year", Number(value));
-    }
-  };
-
-  const handleSortChange = (value: string | null) => {
-    if (value) {
-      filter.updateFilter("sortBy", value);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <SectionHeading
@@ -102,7 +84,15 @@ export default function SemestersList() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Year Filter */}
-          <Select value={currentYearValue} onValueChange={handleYearChange}>
+          <Select
+            value={filter.getFilter("year") || "all"}
+            onValueChange={(val) =>
+              filter.updateFilter(
+                "year",
+                !val || val === "all" ? null : Number(val)
+              )
+            }
+          >
             <SelectTrigger className="w-32.5 cursor-pointer">
               <SelectValue placeholder="Year">
                 {(val) => (val === "all" || !val ? "All Years" : val)}
@@ -118,7 +108,12 @@ export default function SemestersList() {
           </Select>
 
           {/* Sort By Filter */}
-          <Select value={currentSortValue} onValueChange={handleSortChange}>
+          <Select
+            value={(filter.getFilter("sortBy") as SemesterSortBy) || "newest"}
+            onValueChange={(val) => {
+              if (val) filter.updateFilter("sortBy", val);
+            }}
+          >
             <SelectTrigger className="min-w-46 cursor-pointer">
               <SelectValue placeholder="Sort by">
                 {(val) =>

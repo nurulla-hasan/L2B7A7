@@ -64,24 +64,6 @@ export default function CoursesList() {
   const courses = response?.data ?? [];
   const meta = response?.meta;
 
-  const currentCreditValue = filter.getFilter("credits") || "all";
-  const currentSortValue =
-    (filter.getFilter("sortBy") as CourseSortBy) || "newest";
-
-  const handleCreditChange = (value: string | null) => {
-    if (!value || value === "all") {
-      filter.updateFilter("credits", null);
-    } else {
-      filter.updateFilter("credits", Number(value));
-    }
-  };
-
-  const handleSortChange = (value: string | null) => {
-    if (value) {
-      filter.updateFilter("sortBy", value);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <SectionHeading
@@ -106,7 +88,15 @@ export default function CoursesList() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Credits Filter */}
-          <Select value={currentCreditValue} onValueChange={handleCreditChange}>
+          <Select
+            value={filter.getFilter("credits") || "all"}
+            onValueChange={(val) =>
+              filter.updateFilter(
+                "credits",
+                !val || val === "all" ? null : Number(val)
+              )
+            }
+          >
             <SelectTrigger className="w-36 cursor-pointer">
               <SelectValue placeholder="Credits">
                 {(val) =>
@@ -124,7 +114,12 @@ export default function CoursesList() {
           </Select>
 
           {/* Sort By Filter */}
-          <Select value={currentSortValue} onValueChange={handleSortChange}>
+          <Select
+            value={(filter.getFilter("sortBy") as CourseSortBy) || "newest"}
+            onValueChange={(val) => {
+              if (val) filter.updateFilter("sortBy", val);
+            }}
+          >
             <SelectTrigger className="min-w-48 cursor-pointer">
               <SelectValue placeholder="Sort by">
                 {(val) =>

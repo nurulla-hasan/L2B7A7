@@ -71,25 +71,6 @@ export default function CourseOfferingsList() {
   const offerings = response?.data ?? [];
   const meta = response?.meta;
 
-  const currentSemesterValue = filter.getFilter("semesterId") || "all";
-  const currentCourseValue = filter.getFilter("courseId") || "all";
-  const currentSortValue =
-    (filter.getFilter("sortBy") as CourseOfferingSortBy) || "newest";
-
-  const handleSemesterChange = (value: string | null) => {
-    filter.updateFilter("semesterId", !value || value === "all" ? null : value);
-  };
-
-  const handleCourseChange = (value: string | null) => {
-    filter.updateFilter("courseId", !value || value === "all" ? null : value);
-  };
-
-  const handleSortChange = (value: string | null) => {
-    if (value) {
-      filter.updateFilter("sortBy", value);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <SectionHeading
@@ -115,8 +96,13 @@ export default function CourseOfferingsList() {
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Semester Filter */}
           <Select
-            value={currentSemesterValue}
-            onValueChange={handleSemesterChange}
+            value={filter.getFilter("semesterId") || "all"}
+            onValueChange={(val) =>
+              filter.updateFilter(
+                "semesterId",
+                !val || val === "all" ? null : val
+              )
+            }
           >
             <SelectTrigger className="w-40 cursor-pointer">
               <SelectValue placeholder="Semester">
@@ -144,7 +130,15 @@ export default function CourseOfferingsList() {
           </Select>
 
           {/* Course Filter */}
-          <Select value={currentCourseValue} onValueChange={handleCourseChange}>
+          <Select
+            value={filter.getFilter("courseId") || "all"}
+            onValueChange={(val) =>
+              filter.updateFilter(
+                "courseId",
+                !val || val === "all" ? null : val
+              )
+            }
+          >
             <SelectTrigger className="w-40 cursor-pointer">
               <SelectValue placeholder="Course">
                 {(val) => {
@@ -171,7 +165,14 @@ export default function CourseOfferingsList() {
           </Select>
 
           {/* Sort By Filter */}
-          <Select value={currentSortValue} onValueChange={handleSortChange}>
+          <Select
+            value={
+              (filter.getFilter("sortBy") as CourseOfferingSortBy) || "newest"
+            }
+            onValueChange={(val) => {
+              if (val) filter.updateFilter("sortBy", val);
+            }}
+          >
             <SelectTrigger className="min-w-44 cursor-pointer">
               <SelectValue placeholder="Sort by">
                 {(val) =>
