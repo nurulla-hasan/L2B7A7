@@ -6,3 +6,5 @@ export * from "./api/semester.api";
 export * from "./hooks/semester.hook";
 export * from "./api/course.api";
 export * from "./hooks/course.hook";
+export * from "./api/course-offering.api";
+export * from "./hooks/course-offering.hook";
