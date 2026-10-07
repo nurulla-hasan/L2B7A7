@@ -2,33 +2,20 @@
 
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Ban, Check, MoreHorizontal, UserCheck, UserCog } from "lucide-react";
+import { Ban, UserCheck } from "lucide-react";
 
-import type { UserItem, UserRole } from "@/types";
-import { useUpdateUserRole, useUpdateUserStatus } from "@/services";
+import type { UserItem } from "@/types";
+import { useUpdateUserStatus } from "@/services";
 import { ConfirmationModal } from "@/components/common/confirmation-modal";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { successToast, errorToast } from "@/lib/toast";
 import { getErrorMessage } from "@/lib/error";
-import { formatDate } from "@/lib/utils";
+import { formatDate, cn } from "@/lib/utils";
 
 function UserActionsCell({ user }: { user: UserItem }) {
-  const [isStatusModalOpen, setIsStatusModalOpen] = React.useState(false);
   const { mutate: updateStatus, isPending: isUpdatingStatus } =
     useUpdateUserStatus();
-  const { mutate: updateRole, isPending: isUpdatingRole } = useUpdateUserRole();
 
   const handleConfirmStatusChange = () => {
     const nextStatus = user.status === "ACTIVE" ? "BLOCKED" : "ACTIVE";
@@ -43,7 +30,6 @@ function UserActionsCell({ user }: { user: UserItem }) {
             "User status updated",
             `${user.name} has been ${nextStatus === "ACTIVE" ? "activated" : "blocked"}.`,
           );
-          setIsStatusModalOpen(false);
         },
         onError: (error) => {
           errorToast(getErrorMessage(error, "Failed to update user status"));
@@ -52,99 +38,41 @@ function UserActionsCell({ user }: { user: UserItem }) {
     );
   };
 
-  const handleRoleChange = (role: UserRole) => {
-    if (role === user.role) return;
-    updateRole(
-      {
-        id: user.id,
-        payload: { role },
-      },
-      {
-        onSuccess: () => {
-          successToast(
-            "User role updated",
-            `${user.name}'s role changed to ${role}.`,
-          );
-        },
-        onError: (error) => {
-          errorToast(getErrorMessage(error, "Failed to update user role"));
-        },
-      },
-    );
-  };
+  const isBlocked = user.status === "BLOCKED";
 
   return (
-    <div className="text-right">
-      <DropdownMenu>
-        <DropdownMenuTrigger className="inline-flex size-8 items-center justify-center rounded-md hover:bg-muted cursor-pointer transition-colors">
-          <MoreHorizontal className="size-4" />
-          <span className="sr-only">Open menu</span>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-
-          <DropdownMenuGroup>
-            {/* Role Change Submenu */}
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <UserCog className="mr-2 size-4" />
-                <span>Change Role</span>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="w-36">
-                {(["ADMIN", "TEACHER", "STUDENT"] as const).map((role) => (
-                  <DropdownMenuItem
-                    key={role}
-                    disabled={user.role === role || isUpdatingRole}
-                    onClick={() => handleRoleChange(role)}
-                    className="flex items-center justify-between cursor-pointer"
-                  >
-                    <span className="capitalize">{role.toLowerCase()}</span>
-                    {user.role === role && <Check className="ml-2 size-3.5" />}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-
-            {/* Status Toggle Item */}
-            <DropdownMenuItem
-              variant={user.status === "ACTIVE" ? "destructive" : "default"}
-              onClick={() => setIsStatusModalOpen(true)}
-              className="cursor-pointer"
-            >
-              {user.status === "ACTIVE" ? (
-                <>
-                  <Ban className="mr-2 size-4" />
-                  <span>Block User</span>
-                </>
-              ) : (
-                <>
-                  <UserCheck className="mr-2 size-4 text-primary" />
-                  <span className="text-primary">Activate User</span>
-                </>
-              )}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
+    <div className="flex items-center justify-end">
       <ConfirmationModal
-        open={isStatusModalOpen}
-        onOpenChange={setIsStatusModalOpen}
-        title={user.status === "ACTIVE" ? "Block User" : "Activate User"}
+        title={isBlocked ? "Activate User" : "Block User"}
         description={`Are you sure you want to ${
-          user.status === "ACTIVE" ? "block" : "activate"
+          isBlocked ? "activate" : "block"
         } ${user.name}? ${
-          user.status === "ACTIVE"
-            ? "The user will lose access to the portal immediately."
-            : "The user will regain access to their account."
+          isBlocked
+            ? "The user will regain access to their account."
+            : "The user will lose access to the portal immediately."
         }`}
-        confirmText={user.status === "ACTIVE" ? "Block User" : "Activate User"}
-        variant={user.status === "ACTIVE" ? "destructive" : "default"}
+        confirmText={isBlocked ? "Activate User" : "Block User"}
+        variant={isBlocked ? "default" : "destructive"}
         isLoading={isUpdatingStatus}
         onConfirm={handleConfirmStatusChange}
+        trigger={
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "cursor-pointer",
+              isBlocked
+                ? "text-primary hover:bg-primary/10"
+                : "text-destructive hover:bg-destructive/10",
+            )}
+            title={isBlocked ? "Activate User" : "Block User"}
+          >
+            {isBlocked ? <UserCheck /> : <Ban />}
+            <span className="sr-only">
+              {isBlocked ? "Activate user" : "Block user"}
+            </span>
+          </Button>
+        }
       />
     </div>
   );

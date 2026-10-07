@@ -20,7 +20,11 @@ import { ModalWrapper } from "@/components/common/modal-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import { useGetCourseOfferingById } from "@/services";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  useGetCourseOfferingById,
+  useGetOfferingEnrollments,
+} from "@/services";
 import { formatDate } from "@/lib/utils";
 import type { CourseOfferingItem } from "@/types";
 
@@ -38,10 +42,14 @@ export function CourseOfferingDetailsModal({
 
   const { data: response, isLoading } = useGetCourseOfferingById(
     initialOffering.id,
-    open
+    open,
   );
 
+  const { data: rosterRes, isLoading: isLoadingRoster } =
+    useGetOfferingEnrollments(initialOffering.id, open);
+
   const offering = response?.data ?? initialOffering;
+  const roster = rosterRes?.data ?? [];
   const course = offering.course;
   const semester = offering.semester;
   const teacher = offering.teacher;
@@ -49,7 +57,10 @@ export function CourseOfferingDetailsModal({
 
   const enrolled = offering._count?.enrollments ?? 0;
   const capacity = offering.capacity;
-  const fillPercentage = Math.min(100, Math.round((enrolled / (capacity || 1)) * 100));
+  const fillPercentage = Math.min(
+    100,
+    Math.round((enrolled / (capacity || 1)) * 100),
+  );
   const isFull = enrolled >= capacity;
 
   const defaultTrigger = (
@@ -89,7 +100,11 @@ export function CourseOfferingDetailsModal({
                   <Badge variant="default" size="sm">
                     {course.credits} Credits
                   </Badge>
-                  <Badge variant="secondary" size="sm" className="font-mono font-medium">
+                  <Badge
+                    variant="secondary"
+                    size="sm"
+                    className="font-mono font-medium"
+                  >
                     Section {offering.section}
                   </Badge>
                 </div>
@@ -125,7 +140,10 @@ export function CourseOfferingDetailsModal({
               <div className="space-y-1">
                 <div className="flex items-baseline justify-between">
                   <span className="text-lg font-bold text-foreground">
-                    {enrolled} <span className="text-xs font-normal text-muted-foreground">/ {capacity}</span>
+                    {enrolled}{" "}
+                    <span className="text-xs font-normal text-muted-foreground">
+                      / {capacity}
+                    </span>
                   </span>
                   <span className="text-xs font-semibold text-muted-foreground">
                     {fillPercentage}%
@@ -188,7 +206,8 @@ export function CourseOfferingDetailsModal({
                   {semester.name} {semester.year}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Duration: {formatDate(semester.startDate)} - {formatDate(semester.endDate)}
+                  Duration: {formatDate(semester.startDate)} -{" "}
+                  {formatDate(semester.endDate)}
                 </p>
               </div>
             </div>
@@ -228,6 +247,78 @@ export function CourseOfferingDetailsModal({
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Enrolled Students Roster */}
+          <div className="space-y-2.5">
+            <h4 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <Users className="size-3.5 text-primary" />
+              Enrolled Students Roster ({roster.length})
+            </h4>
+
+            {isLoadingRoster ? (
+              <div className="flex h-16 items-center justify-center">
+                <Spinner className="size-4 text-primary" />
+              </div>
+            ) : roster.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border p-3.5 text-center text-xs text-muted-foreground">
+                No students currently enrolled in this course section.
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {roster.map((enr) => (
+                  <div
+                    key={enr.id}
+                    className="flex flex-col gap-2 rounded-lg border border-border bg-card p-2.5 sm:flex-row sm:items-center sm:justify-between text-xs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Avatar size="sm">
+                        {enr.student.imageUrl && (
+                          <AvatarImage
+                            src={enr.student.imageUrl}
+                            alt={enr.student.name}
+                          />
+                        )}
+                        <AvatarFallback>
+                          {enr.student.name.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-foreground">
+                          {enr.student.name}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {enr.student.email}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {enr.student.studentProfile?.studentId && (
+                        <span className="text-[10px] font-mono text-muted-foreground">
+                          ID: {enr.student.studentProfile.studentId}
+                        </span>
+                      )}
+                      <Badge
+                        variant={
+                          enr.status === "ENROLLED"
+                            ? "default"
+                            : enr.status === "PENDING_PAYMENT"
+                              ? "secondary"
+                              : "destructive"
+                        }
+                        size="sm"
+                        className="text-[10px]"
+                      >
+                        {enr.status === "PENDING_PAYMENT"
+                          ? "Pending"
+                          : enr.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Images Gallery if course has images */}

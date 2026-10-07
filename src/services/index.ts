@@ -8,3 +8,5 @@ export * from "./api/course.api";
 export * from "./hooks/course.hook";
 export * from "./api/course-offering.api";
 export * from "./hooks/course-offering.hook";
+export * from "./api/enrollment.api";
+export * from "./hooks/enrollment.hook";
