@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useNextFilter } from "@/hooks/useNextFilter";
 import {
   Pagination,
   PaginationContent,
@@ -17,45 +16,102 @@ type PaginationIdentifier = number | "...";
 const getPaginationRange = (
   totalPages: number,
   currentPage: number,
-  siblingCount = 1
+  siblingCount = 1,
 ): PaginationIdentifier[] => {
   const totalPageNumbers = siblingCount + 5;
 
   if (totalPageNumbers >= totalPages) {
-    return Array.from({ length: totalPages }, (_, idx) => idx + 1);
+    return Array.from(
+      { length: totalPages },
+      (_, idx) => idx + 1,
+    );
   }
 
-  const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
-  const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
+  const leftSiblingIndex = Math.max(
+    currentPage - siblingCount,
+    1,
+  );
 
-  const shouldShowLeftDots = leftSiblingIndex > 2;
-  const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
+  const rightSiblingIndex = Math.min(
+    currentPage + siblingCount,
+    totalPages,
+  );
+
+  const shouldShowLeftDots =
+    leftSiblingIndex > 2;
+
+  const shouldShowRightDots =
+    rightSiblingIndex < totalPages - 2;
 
   const firstPageIndex = 1;
   const lastPageIndex = totalPages;
 
-  if (!shouldShowLeftDots && shouldShowRightDots) {
-    const leftItemCount = 3 + 2 * siblingCount;
-    const leftRange = Array.from({ length: leftItemCount }, (_, i) => i + 1);
-    return [...leftRange, "...", totalPages];
+  if (
+    !shouldShowLeftDots &&
+    shouldShowRightDots
+  ) {
+    const leftItemCount =
+      3 + 2 * siblingCount;
+
+    const leftRange = Array.from(
+      { length: leftItemCount },
+      (_, i) => i + 1,
+    );
+
+    return [
+      ...leftRange,
+      "...",
+      totalPages,
+    ];
   }
 
-  if (shouldShowLeftDots && !shouldShowRightDots) {
-    const rightItemCount = 3 + 2 * siblingCount;
+  if (
+    shouldShowLeftDots &&
+    !shouldShowRightDots
+  ) {
+    const rightItemCount =
+      3 + 2 * siblingCount;
+
     const rightRange = Array.from(
       { length: rightItemCount },
-      (_, i) => totalPages - rightItemCount + i + 1
+      (_, i) =>
+        totalPages -
+        rightItemCount +
+        i +
+        1,
     );
-    return [firstPageIndex, "...", ...rightRange];
+
+    return [
+      firstPageIndex,
+      "...",
+      ...rightRange,
+    ];
   }
 
-  if (shouldShowLeftDots && shouldShowRightDots) {
+  if (
+    shouldShowLeftDots &&
+    shouldShowRightDots
+  ) {
     const middleRange = Array.from(
-      { length: rightSiblingIndex - leftSiblingIndex + 1 },
-      (_, i) => leftSiblingIndex + i
+      {
+        length:
+          rightSiblingIndex -
+          leftSiblingIndex +
+          1,
+      },
+      (_, i) =>
+        leftSiblingIndex + i,
     );
-    return [firstPageIndex, "...", ...middleRange, "...", lastPageIndex];
+
+    return [
+      firstPageIndex,
+      "...",
+      ...middleRange,
+      "...",
+      lastPageIndex,
+    ];
   }
+
   return [];
 };
 
@@ -63,46 +119,63 @@ type CustomPaginationProps = {
   currentPage: number;
   totalPages: number;
   className?: string;
+
+  /**
+   * Comes from useStateFilter.
+   */
+  updatePage: (page: number) => void;
 };
 
-const CustomPagination: React.FC<CustomPaginationProps> = ({
+const CustomPagination: React.FC<
+  CustomPaginationProps
+> = ({
   currentPage,
   totalPages,
   className,
+  updatePage,
 }) => {
-  const { updateFilter, paramsString } = useNextFilter({
-    defaultMethod: "push",
-  });
-
   if (totalPages <= 1) return null;
 
-  const paginationRange = getPaginationRange(totalPages, currentPage);
-
-  const createPageUrl = (pageNumber: number | string) => {
-    const params = new URLSearchParams(paramsString);
-    params.set("page", pageNumber.toString());
-    return `?${params.toString()}`;
-  };
+  const paginationRange =
+    getPaginationRange(
+      totalPages,
+      currentPage,
+    );
 
   const handleNavigate =
-    (pageNumber: number) => (e: React.MouseEvent<HTMLAnchorElement>) => {
-      e.preventDefault();
-      updateFilter("page", pageNumber, {
-        resetPage: false,
-        scroll: false,
-      });
+    (pageNumber: number) =>
+    (
+      event: React.MouseEvent<
+        HTMLAnchorElement
+      >,
+    ) => {
+      event.preventDefault();
+
+      updatePage(pageNumber);
     };
 
   return (
     <Pagination className={className}>
       <PaginationContent>
-        {/* Previous Button */}
+        {/* Previous */}
         <PaginationItem>
           <PaginationPrevious
-            href={currentPage > 1 ? createPageUrl(currentPage - 1) : "#"}
-            onClick={currentPage > 1 ? handleNavigate(currentPage - 1) : undefined}
-            aria-disabled={currentPage <= 1}
-            tabIndex={currentPage <= 1 ? -1 : undefined}
+            href="#"
+            onClick={
+              currentPage > 1
+                ? handleNavigate(
+                    currentPage - 1,
+                  )
+                : undefined
+            }
+            aria-disabled={
+              currentPage <= 1
+            }
+            tabIndex={
+              currentPage <= 1
+                ? -1
+                : undefined
+            }
             size="sm"
             className={
               currentPage <= 1
@@ -113,36 +186,59 @@ const CustomPagination: React.FC<CustomPaginationProps> = ({
         </PaginationItem>
 
         {/* Page Numbers */}
-        {paginationRange.map((pageNumber, index) => {
-          if (pageNumber === "...") {
+        {paginationRange.map(
+          (pageNumber, index) => {
+            if (pageNumber === "...") {
+              return (
+                <PaginationItem
+                  key={`ellipsis-${index}`}
+                >
+                  <PaginationEllipsis />
+                </PaginationItem>
+              );
+            }
+
             return (
-              <PaginationItem key={`ellipsis-${index}`}>
-                <PaginationEllipsis />
+              <PaginationItem
+                key={pageNumber}
+              >
+                <PaginationLink
+                  href="#"
+                  isActive={
+                    currentPage ===
+                    pageNumber
+                  }
+                  onClick={handleNavigate(
+                    pageNumber,
+                  )}
+                  size="sm"
+                >
+                  {pageNumber}
+                </PaginationLink>
               </PaginationItem>
             );
-          }
+          },
+        )}
 
-          return (
-            <PaginationItem key={pageNumber}>
-              <PaginationLink
-                href={createPageUrl(pageNumber)}
-                isActive={currentPage === pageNumber}
-                onClick={handleNavigate(pageNumber as number)}
-                size="sm"
-              >
-                {pageNumber}
-              </PaginationLink>
-            </PaginationItem>
-          );
-        })}
-
-        {/* Next Button */}
+        {/* Next */}
         <PaginationItem>
           <PaginationNext
-            href={currentPage < totalPages ? createPageUrl(currentPage + 1) : "#"}
-            onClick={currentPage < totalPages ? handleNavigate(currentPage + 1) : undefined}
-            aria-disabled={currentPage >= totalPages}
-            tabIndex={currentPage >= totalPages ? -1 : undefined}
+            href="#"
+            onClick={
+              currentPage < totalPages
+                ? handleNavigate(
+                    currentPage + 1,
+                  )
+                : undefined
+            }
+            aria-disabled={
+              currentPage >= totalPages
+            }
+            tabIndex={
+              currentPage >= totalPages
+                ? -1
+                : undefined
+            }
             size="sm"
             className={
               currentPage >= totalPages

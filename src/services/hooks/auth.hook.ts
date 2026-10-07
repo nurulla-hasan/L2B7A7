@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { QUERY_KEYS } from "@/constants/query-keys";
 import {
   changePassword,
   forgotPassword,
@@ -17,7 +16,7 @@ import {
 
 export function useGetMe() {
   return useQuery({
-    queryKey: QUERY_KEYS.AUTH.ME,
+    queryKey: ["auth", "me"],
     queryFn: getMe,
     retry: false,
     staleTime: 5 * 60 * 1000,
@@ -26,7 +25,7 @@ export function useGetMe() {
 
 export function useSuspenseGetMe() {
   return useSuspenseQuery({
-    queryKey: QUERY_KEYS.AUTH.ME,
+    queryKey: ["auth", "me"],
     queryFn: getMe,
     staleTime: 5 * 60 * 1000,
   });
@@ -38,7 +37,7 @@ export function useLogin() {
   return useMutation({
     mutationFn: loginUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.AUTH.ME });
+      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
     },
   });
 }
@@ -55,7 +54,7 @@ export function useVerifyEmail() {
   return useMutation({
     mutationFn: verifyEmail,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.AUTH.ME });
+      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
     },
   });
 }
@@ -72,7 +71,7 @@ export function useUpdateMe() {
   return useMutation({
     mutationFn: updateMe,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.AUTH.ME });
+      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
     },
   });
 }
@@ -113,7 +112,7 @@ export function useLogout() {
   return useMutation({
     mutationFn: logoutUser,
     onSuccess: () => {
-      queryClient.setQueryData(QUERY_KEYS.AUTH.ME, null);
+      queryClient.setQueryData(["auth", "me"], null);
       queryClient.clear();
     },
   });

@@ -2,19 +2,16 @@
 
 import * as React from "react";
 import {
-  ColumnDef,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type PaginationState,
   flexRender,
   getCoreRowModel,
-  useReactTable,
-  getPaginationRowModel,
-  PaginationState,
-  ColumnFiltersState,
   getFilteredRowModel,
+  getPaginationRowModel,
+  useReactTable,
 } from "@tanstack/react-table";
-import { Search } from "lucide-react";
 
-import { Input } from "@/components/ui/input";
-import { useNextFilter } from "@/hooks/useNextFilter";
 import {
   Table,
   TableBody,
@@ -24,13 +21,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DataTablePagination } from "./data-table-pagination";
-import { cn } from "@/lib/utils";
-import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 
-/**
- * Metadata for server-side pagination
- */
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+
+import { cn } from "@/lib/utils";
+import { AlertCircle, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DataTablePagination } from "./data-table-pagination";
+
 type PaginationMeta = {
   total: number;
   page: number;
@@ -38,9 +37,21 @@ type PaginationMeta = {
   totalPages: number;
 };
 
-/**
- * Extend TanStack Table's ColumnMeta only for custom header class.
- */
+type FilterValue = string | number | null | undefined;
+
+type StateFilterController<T extends string> = {
+  updateFilter: (
+    key: T,
+    value: FilterValue,
+    options?:
+      | {
+          debounce?: number;
+          resetPage?: boolean;
+        }
+      | number,
+  ) => void;
+};
+
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData, TValue> {
@@ -48,202 +59,249 @@ declare module "@tanstack/react-table" {
   }
 }
 
-interface DataTableProps<TData, TValue> {
+interface DataTableProps<TData, TValue, TFilterKey extends string = string> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  limit?: number;
+
   meta?: PaginationMeta;
+
+  filter?: StateFilterController<TFilterKey>;
+
+  paginationKey?: TFilterKey;
+
   tableMeta?: Record<string, unknown>;
 
-  /**
-   * The key in the URL for searching.
-   * Example: "q", "search", "customer"
-   */
-  searchKey?: string;
-
-  searchPlaceholder?: string;
   showFooter?: boolean;
+
+  isLoading?: boolean;
+  isFetching?: boolean;
+  skeletonRowCount?: number;
+
+  isError?: boolean;
+  errorMessage?: string;
+  onRetry?: () => void;
 }
 
-/**
- * Internal component that handles table logic and URL search synchronization.
- * This is wrapped in Suspense by the main DataTable component.
- */
-function DataTableInner<TData, TValue>({
+export function DataTable<TData, TValue, TFilterKey extends string = string>({
   columns,
   data,
-  limit = 10,
   meta,
+  filter,
+  paginationKey = "page" as TFilterKey,
   tableMeta,
-  searchKey,
-  searchPlaceholder,
   showFooter = false,
-}: DataTableProps<TData, TValue>) {
-  const { updateFilter, getFilter } = useNextFilter<string>({
-    paginationKey: "page",
-    defaultDebounce: 500,
-    defaultMethod: "replace",
-  });
-
-  const [columnFilters, setColumnFilters] =
-    React.useState<ColumnFiltersState>([]);
+  isLoading = false,
+  isFetching = false,
+  skeletonRowCount,
+  isError = false,
+  errorMessage,
+  onRetry,
+}: DataTableProps<TData, TValue, TFilterKey>) {
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    [],
+  );
 
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: meta ? meta.page - 1 : 0,
-    pageSize: limit,
+
+    pageSize: meta ? meta.limit : 10,
   });
 
   /**
-   * Keep internal pagination state in sync with external meta props.
-   * Useful when pagination is controlled by server response.
+   * Sync TanStack Table's internal pagination
+   * with API response meta.
    */
   React.useEffect(() => {
-    setPagination((prev) => ({
-      ...prev,
-      pageSize: limit,
-      ...(meta && { pageIndex: meta.page - 1 }),
-    }));
-  }, [limit, meta]);
+    if (!meta) return;
+
+    setPagination({
+      pageIndex: meta.page - 1,
+      pageSize: meta.limit,
+    });
+  }, [meta]);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
-    pageCount: meta
-      ? (meta.totalPages ?? Math.ceil(meta.total / meta.limit))
-      : undefined,
+
     state: {
       columnFilters,
       pagination,
     },
-    onPaginationChange: setPagination,
+
     onColumnFiltersChange: setColumnFilters,
 
+    onPaginationChange: setPagination,
+
     /**
-     * If meta exists, pagination is handled by the server/API.
-     * Otherwise, TanStack handles pagination locally.
+     * meta exists = API/server pagination
      */
-    manualPagination: !!meta,
+    manualPagination: Boolean(meta),
+
+    pageCount: meta
+      ? (meta.totalPages ?? Math.ceil(meta.total / meta.limit))
+      : undefined,
 
     getCoreRowModel: getCoreRowModel(),
+
     getFilteredRowModel: getFilteredRowModel(),
+
     getPaginationRowModel: meta ? undefined : getPaginationRowModel(),
+
     meta: tableMeta,
   });
 
   return (
     <div className="space-y-4">
-      {searchKey && (
-        <div className="flex items-center justify-between gap-3">
-          <div className="relative w-full max-w-64">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder={searchPlaceholder ?? `Search ${searchKey}...`}
-              value={getFilter(searchKey)}
-              onChange={(event) =>
-                updateFilter(searchKey, event.target.value, {
-                  debounce: 300,
-                  method: "replace",
-                })
-              }
-              className="pl-9"
-            />
+      <div className="relative overflow-hidden rounded-lg border">
+        {isFetching && !isLoading && data.length > 0 && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-[1px] transition-all">
+            <div className="flex items-center justify-center rounded-full border bg-background/95 p-2 shadow-sm">
+              <div className="size-5 animate-spin rounded-full border-2 border-dashed border-primary" />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <ScrollArea className="w-full rounded-lg border overflow-x-auto">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className={cn(
-                      "h-12 px-4 bg-accent",
-                      header.column.columnDef.meta?.headerClassName,
-                    )}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-
-          <TableBody>
-            {table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="h-12 pl-4">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
+        <ScrollArea className="w-full overflow-x-auto">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      className={cn(
+                        "h-12 bg-accent px-4",
+                        header.column.columnDef.meta?.headerClassName,
                       )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-
-          {showFooter && (
-            <TableFooter className="border-t">
-              {table.getFooterGroups().map((footerGroup) => (
-                <TableRow key={footerGroup.id}>
-                  {footerGroup.headers.map((footer) => (
-                    <TableCell key={footer.id} className="p-2">
-                      {footer.isPlaceholder
+                    >
+                      {header.isPlaceholder
                         ? null
                         : flexRender(
-                            footer.column.columnDef.footer,
-                            footer.getContext(),
+                            header.column.columnDef.header,
+                            header.getContext(),
                           )}
-                    </TableCell>
+                    </TableHead>
                   ))}
                 </TableRow>
               ))}
-            </TableFooter>
-          )}
-        </Table>
+            </TableHeader>
 
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+            <TableBody
+              className={cn(
+                isFetching &&
+                  !isLoading &&
+                  data.length > 0 &&
+                  "pointer-events-none opacity-35 transition-opacity duration-200",
+              )}
+            >
+              {isError ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-56 text-center"
+                  >
+                    <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
+                      <div className="flex size-10 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                        <AlertCircle className="size-5" />
+                      </div>
+                      <p className="text-sm font-semibold text-foreground">
+                        Failed to load data
+                      </p>
+                      <p className="text-xs text-muted-foreground max-w-sm">
+                        {errorMessage ||
+                          "An unexpected error occurred while fetching data. Please try again."}
+                      </p>
+                      {onRetry && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={onRetry}
+                          className="mt-2 cursor-pointer"
+                        >
+                          <RotateCcw className="mr-1.5 size-3.5" />
+                          Try again
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : isLoading || (isFetching && data.length === 0) ? (
+                Array.from({
+                  length: skeletonRowCount ?? meta?.limit ?? 10,
+                }).map((_, rowIndex) => (
+                  <TableRow key={`skeleton-row-${rowIndex}`}>
+                    {columns.map((_, colIndex) => (
+                      <TableCell
+                        key={`skeleton-cell-${colIndex}`}
+                        className="h-12 pl-4"
+                      >
+                        <Skeleton className="h-4 w-full max-w-[85%] rounded" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : table.getRowModel().rows.length > 0 ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="h-12 pl-4">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center text-muted-foreground"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
 
-      {(meta || table.getPageCount() > 1) && (
-        <DataTablePagination table={table} meta={meta} />
+            {showFooter && (
+              <TableFooter className="border-t">
+                {table.getFooterGroups().map((footerGroup) => (
+                  <TableRow key={footerGroup.id}>
+                    {footerGroup.headers.map((footer) => (
+                      <TableCell key={footer.id} className="p-2">
+                        {footer.isPlaceholder
+                          ? null
+                          : flexRender(
+                              footer.column.columnDef.footer,
+                              footer.getContext(),
+                            )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableFooter>
+            )}
+          </Table>
+
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      </div>
+
+      {!isError && (meta || table.getPageCount() > 1) && (
+        <DataTablePagination
+          table={table}
+          meta={meta}
+          filter={filter}
+          paginationKey={paginationKey}
+        />
       )}
     </div>
-  );
-}
-
-/**
- * Main DataTable component wrapped in a Suspense boundary.
- * Use this component anywhere in your app without worrying about search params bailout.
- */
-export function DataTable<TData, TValue>(props: DataTableProps<TData, TValue>) {
-  return (
-    <React.Suspense fallback={null}>
-      <DataTableInner {...props} />
-    </React.Suspense>
   );
 }

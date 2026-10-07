@@ -8,6 +8,10 @@ import {
   useState,
 } from "react";
 
+// ============================================
+// Type Definitions
+// ============================================
+
 type FilterValue = string | number | null | undefined;
 
 type FilterState<T extends string> = Partial<Record<T, string>>;
@@ -21,10 +25,10 @@ export interface StateFilterOptions {
 }
 
 export interface StateFilterConfig<T extends string> {
-  /** Pagination key */
+  /** Key used for pagination */
   paginationKey?: T;
 
-  /** Default debounce delay */
+  /** Default debounce delay for all updates */
   defaultDebounce?: number;
 
   /** Initial filter values */
@@ -32,52 +36,74 @@ export interface StateFilterConfig<T extends string> {
 }
 
 export interface StateClearAllOptions<T extends string> {
-  /** Keys to preserve while clearing */
+  /** Keys to exclude from clearing */
   exclude?: ReadonlyArray<T>;
 }
 
 const BATCH_KEY = "___global_batch_update___";
 
+// ============================================
+// Helpers
+// ============================================
+
 function normalizeFilters<T extends string>(
-  values: Partial<Record<T, FilterValue>>
+  values: Partial<Record<T, FilterValue>>,
 ): FilterState<T> {
   const result: FilterState<T> = {};
 
-  Object.entries(values).forEach(([key, value]) => {
+  const entries = Object.entries(values) as [T, FilterValue][];
+
+  entries.forEach(([key, value]) => {
     if (value !== null && value !== undefined && value !== "") {
-      result[key as T] = String(value);
+      result[key] = String(value);
     }
   });
 
   return result;
 }
 
-export function useStateFilter<T extends string = string>(
-  config: StateFilterConfig<T> = {}
-) {
+// ============================================
+// Main Hook
+// ============================================
+
+/**
+ * A reusable hook for managing local/state-based filters.
+ *
+ * Features:
+ * - Immediate UI updates
+ * - Debounced committed filter state
+ * - Batch filter updates
+ * - Pagination reset
+ * - Multi-select toggle
+ * - Clear all filters
+ * - Pending update state
+ *
+ * `draftFilters` / read helpers:
+ *   Immediate UI state.
+ *
+ * `filters`:
+ *   Stable committed state intended for TanStack Query.
+ */
+export const useStateFilter = <T extends string = string>(
+  config: StateFilterConfig<T> = {},
+) => {
   const {
     paginationKey = "page" as T,
     defaultDebounce = 0,
     initialValues = {},
   } = config;
 
-  /*
-   * draftFilters:
-   * UI immediately sees these values.
-   *
-   * filters:
-   * TanStack Query should use these.
-   * Debounced values reach here after debounce.
-   */
+  // Immediate UI state
   const [draftFilters, setDraftFilters] = useState<FilterState<T>>(() =>
-    normalizeFilters(initialValues)
+    normalizeFilters(initialValues),
   );
 
+  // Committed state for API / TanStack Query
   const [filters, setFilters] = useState<FilterState<T>>(() =>
-    normalizeFilters(initialValues)
+    normalizeFilters(initialValues),
   );
 
-  const draftRef = useRef(draftFilters);
+  const draftFiltersRef = useRef(draftFilters);
   const filtersRef = useRef(filters);
 
   const timeoutRefs = useRef<
@@ -85,6 +111,10 @@ export function useStateFilter<T extends string = string>(
   >({});
 
   const [pendingKeys, setPendingKeys] = useState<string[]>([]);
+
+  // ============================================
+  // Helpers
+  // ============================================
 
   const isEmptyValue = useCallback((value: FilterValue) => {
     return value === null || value === undefined || value === "";
@@ -100,25 +130,23 @@ export function useStateFilter<T extends string = string>(
 
       return !Number.isInteger(page) || page < 1;
     },
-    [paginationKey, isEmptyValue]
+    [paginationKey, isEmptyValue],
   );
 
   const applyUpdates = useCallback(
     (
       current: FilterState<T>,
       updates: Partial<Record<T, FilterValue>>,
-      resetPage: boolean
+      resetPage: boolean,
     ) => {
       const next: FilterState<T> = { ...current };
 
-      let hasFilterChanged = false;
-
       const entries = Object.entries(updates) as [T, FilterValue][];
 
+      let hasFilterChanged = false;
+
       entries.forEach(([key, value]) => {
-        if (isInvalidPagination(key, value)) {
-          return;
-        }
+        if (isInvalidPagination(key, value)) return;
 
         if (isEmptyValue(value)) {
           delete next[key];
@@ -137,57 +165,19 @@ export function useStateFilter<T extends string = string>(
 
       return next;
     },
-    [paginationKey, isEmptyValue, isInvalidPagination]
-  );
-
-  const updateDraft = useCallback(
-    (
-      updates: Partial<Record<T, FilterValue>>,
-      resetPage: boolean
-    ) => {
-      const next = applyUpdates(
-        draftRef.current,
-        updates,
-        resetPage
-      );
-
-      draftRef.current = next;
-      setDraftFilters(next);
-    },
-    [applyUpdates]
-  );
-
-  const commitFilters = useCallback(
-    (
-      updates: Partial<Record<T, FilterValue>>,
-      resetPage: boolean
-    ) => {
-      const next = applyUpdates(
-        filtersRef.current,
-        updates,
-        resetPage
-      );
-
-      filtersRef.current = next;
-      setFilters(next);
-    },
-    [applyUpdates]
+    [paginationKey, isEmptyValue, isInvalidPagination],
   );
 
   const addPendingKey = useCallback((key: string) => {
     setPendingKeys((prev) => {
-      if (prev.includes(key)) {
-        return prev;
-      }
+      if (prev.includes(key)) return prev;
 
       return [...prev, key];
     });
   }, []);
 
   const removePendingKey = useCallback((key: string) => {
-    setPendingKeys((prev) =>
-      prev.filter((item) => item !== key)
-    );
+    setPendingKeys((prev) => prev.filter((item) => item !== key));
   }, []);
 
   const clearTimer = useCallback(
@@ -199,61 +189,95 @@ export function useStateFilter<T extends string = string>(
 
       removePendingKey(key);
     },
-    [removePendingKey]
+    [removePendingKey],
   );
 
   const clearAllTimers = useCallback(() => {
     Object.values(timeoutRefs.current).forEach(clearTimeout);
+
     timeoutRefs.current = {};
   }, []);
 
+  const updateDraftFilters = useCallback(
+    (
+      updates: Partial<Record<T, FilterValue>>,
+      resetPage: boolean,
+    ) => {
+      const next = applyUpdates(
+        draftFiltersRef.current,
+        updates,
+        resetPage,
+      );
+
+      draftFiltersRef.current = next;
+      setDraftFilters(next);
+    },
+    [applyUpdates],
+  );
+
+  const commitFilters = useCallback(
+    (
+      updates: Partial<Record<T, FilterValue>>,
+      resetPage: boolean,
+    ) => {
+      const next = applyUpdates(
+        filtersRef.current,
+        updates,
+        resetPage,
+      );
+
+      filtersRef.current = next;
+      setFilters(next);
+    },
+    [applyUpdates],
+  );
+
   const scheduleCommit = useCallback(
     (
-      timerKey: string,
+      key: string,
       updates: Partial<Record<T, FilterValue>>,
       debounce: number,
-      resetPage: boolean
+      resetPage: boolean,
     ) => {
-      clearTimer(timerKey);
+      clearTimer(key);
 
-      const execute = () => {
+      const executeUpdate = () => {
         commitFilters(updates, resetPage);
 
-        delete timeoutRefs.current[timerKey];
-
-        removePendingKey(timerKey);
+        delete timeoutRefs.current[key];
+        removePendingKey(key);
       };
 
       if (debounce > 0) {
-        addPendingKey(timerKey);
+        addPendingKey(key);
 
-        timeoutRefs.current[timerKey] = setTimeout(
-          execute,
-          debounce
+        timeoutRefs.current[key] = setTimeout(
+          executeUpdate,
+          debounce,
         );
-
-        return;
+      } else {
+        executeUpdate();
       }
-
-      execute();
     },
     [
       clearTimer,
       commitFilters,
       addPendingKey,
       removePendingKey,
-    ]
+    ],
   );
+
+  // ============================================
+  // Update Single Filter
+  // ============================================
 
   const updateFilter = useCallback(
     (
       key: T,
       value: FilterValue,
-      options: StateFilterOptions | number = {}
+      options: StateFilterOptions | number = {},
     ) => {
-      if (isInvalidPagination(key, value)) {
-        return;
-      }
+      if (isInvalidPagination(key, value)) return;
 
       const opt =
         typeof options === "number"
@@ -270,32 +294,34 @@ export function useStateFilter<T extends string = string>(
       } as Partial<Record<T, FilterValue>>;
 
       // UI updates immediately
-      updateDraft(updates, resetPage);
+      updateDraftFilters(updates, resetPage);
 
-      // API/query state can be debounced
+      // API state can be debounced
       scheduleCommit(
         key,
         updates,
         debounce,
-        resetPage
+        resetPage,
       );
     },
     [
       defaultDebounce,
       isInvalidPagination,
-      updateDraft,
+      updateDraftFilters,
       scheduleCommit,
-    ]
+    ],
   );
+
+  // ============================================
+  // Update Multiple Filters
+  // ============================================
 
   const updateBatch = useCallback(
     (
       updates: Partial<Record<T, FilterValue>>,
-      options: StateFilterOptions | number = {}
+      options: StateFilterOptions | number = {},
     ) => {
-      if (Object.keys(updates).length === 0) {
-        return;
-      }
+      if (Object.keys(updates).length === 0) return;
 
       const opt =
         typeof options === "number"
@@ -307,29 +333,33 @@ export function useStateFilter<T extends string = string>(
         resetPage = true,
       } = opt;
 
-      updateDraft(updates, resetPage);
+      updateDraftFilters(updates, resetPage);
 
       scheduleCommit(
         BATCH_KEY,
         updates,
         debounce,
-        resetPage
+        resetPage,
       );
     },
     [
       defaultDebounce,
-      updateDraft,
+      updateDraftFilters,
       scheduleCommit,
-    ]
+    ],
   );
+
+  // ============================================
+  // Toggle Filter - Multi Select
+  // ============================================
 
   const toggleFilter = useCallback(
     (
       key: T,
       value: string,
-      options?: StateFilterOptions
+      options?: StateFilterOptions,
     ) => {
-      const currentValue = draftRef.current[key];
+      const currentValue = draftFiltersRef.current[key];
 
       let values = currentValue
         ? currentValue.split(",").filter(Boolean)
@@ -341,14 +371,17 @@ export function useStateFilter<T extends string = string>(
         values.push(value);
       }
 
-      updateFilter(
-        key,
-        values.length > 0 ? values.join(",") : null,
-        options
-      );
+      const finalValue =
+        values.length > 0 ? values.join(",") : null;
+
+      updateFilter(key, finalValue, options);
     },
-    [updateFilter]
+    [updateFilter],
   );
+
+  // ============================================
+  // Clear All Filters
+  // ============================================
 
   const clearAll = useCallback(
     (options: StateClearAllOptions<T> = {}) => {
@@ -357,8 +390,8 @@ export function useStateFilter<T extends string = string>(
       clearAllTimers();
       setPendingKeys([]);
 
-      const getNextState = (
-        current: FilterState<T>
+      const preserveExcluded = (
+        current: FilterState<T>,
       ): FilterState<T> => {
         const next: FilterState<T> = {};
 
@@ -373,23 +406,32 @@ export function useStateFilter<T extends string = string>(
         return next;
       };
 
-      const nextDraft = getNextState(draftRef.current);
-      const nextFilters = getNextState(filtersRef.current);
+      const nextDraft = preserveExcluded(
+        draftFiltersRef.current,
+      );
 
-      draftRef.current = nextDraft;
+      const nextFilters = preserveExcluded(
+        filtersRef.current,
+      );
+
+      draftFiltersRef.current = nextDraft;
       filtersRef.current = nextFilters;
 
       setDraftFilters(nextDraft);
       setFilters(nextFilters);
     },
-    [clearAllTimers]
+    [clearAllTimers],
   );
+
+  // ============================================
+  // Read Methods
+  // ============================================
 
   const getFilter = useCallback(
     (key: T, defaultValue = "") => {
       return draftFilters[key] ?? defaultValue;
     },
-    [draftFilters]
+    [draftFilters],
   );
 
   const getArrayFilter = useCallback(
@@ -400,7 +442,7 @@ export function useStateFilter<T extends string = string>(
         ? value.split(",").filter(Boolean)
         : [];
     },
-    [draftFilters]
+    [draftFilters],
   );
 
   const isSelected = useCallback(
@@ -411,7 +453,7 @@ export function useStateFilter<T extends string = string>(
         ? currentValue.split(",").includes(value)
         : false;
     },
-    [draftFilters]
+    [draftFilters],
   );
 
   const getAllFilters = useCallback(() => {
@@ -420,17 +462,17 @@ export function useStateFilter<T extends string = string>(
 
   const isFilterActive = useCallback(
     (keys?: ReadonlyArray<T>) => {
-      if (keys?.length) {
+      if (keys && keys.length > 0) {
         return keys.some(
-          (key) => draftFilters[key] !== undefined
+          (key) => draftFilters[key] !== undefined,
         );
       }
 
       return Object.keys(draftFilters).some(
-        (key) => key !== paginationKey
+        (key) => key !== paginationKey,
       );
     },
-    [draftFilters, paginationKey]
+    [draftFilters, paginationKey],
   );
 
   const getActiveCount = useCallback(
@@ -438,68 +480,68 @@ export function useStateFilter<T extends string = string>(
       const activeKeys =
         keys ??
         (Object.keys(draftFilters).filter(
-          (key) => key !== paginationKey
+          (key) => key !== paginationKey,
         ) as T[]);
 
       return activeKeys.filter(
-        (key) => draftFilters[key] !== undefined
+        (key) => draftFilters[key] !== undefined,
       ).length;
     },
-    [draftFilters, paginationKey]
+    [draftFilters, paginationKey],
   );
+
+  // ============================================
+  // Pending State
+  // ============================================
 
   const visiblePendingKeys = useMemo(
     () =>
       pendingKeys.filter(
-        (key) => key !== BATCH_KEY
+        (key) => key !== BATCH_KEY,
       ) as T[],
-    [pendingKeys]
+    [pendingKeys],
   );
 
   const isPendingKey = useCallback(
     (key: T) => pendingKeys.includes(key),
-    [pendingKeys]
+    [pendingKeys],
   );
 
+  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       Object.values(timeoutRefs.current).forEach(
-        clearTimeout
+        clearTimeout,
       );
     };
   }, []);
 
   return {
-    /*
-     * Use this in TanStack queryKey/queryFn.
-     * Changes after debounce.
-     */
+    // Committed filters — use with TanStack Query
     filters,
 
-    /*
-     * Immediate UI state.
-     */
+    // Immediate UI state
     draftFilters,
 
-    // Updates
+    // Update methods
     updateFilter,
     updateBatch,
     toggleFilter,
     clearAll,
 
-    // Reads
+    // Read methods
     getFilter,
     getArrayFilter,
     isSelected,
     getAllFilters,
 
-    // Status
+    // Status methods
     isFilterActive,
     getActiveCount,
 
-    // Pending
+    // Pending state
     isPending: pendingKeys.length > 0,
     pendingKeys: visiblePendingKeys,
     isPendingKey,
   };
-}
+};
