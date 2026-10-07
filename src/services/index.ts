@@ -14,3 +14,5 @@ export * from "./api/payment.api";
 export * from "./hooks/payment.hook";
 export * from "./api/result.api";
 export * from "./hooks/result.hook";
+export * from "./api/audit.api";
+export * from "./hooks/audit.hook";
