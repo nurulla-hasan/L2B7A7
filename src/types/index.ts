@@ -6,3 +6,4 @@ export * from "./course.types";
 export * from "./course-offering.types";
 export * from "./enrollment.types";
 export * from "./payment.types";
+export * from "./result.types";

@@ -3,3 +3,4 @@ export * from "./semester.validation";
 export * from "./course.validation";
 export * from "./course-offering.validation";
 export * from "./enrollment.validation";
+export * from "./result.validation";
