@@ -7,8 +7,10 @@ import {
 import {
   getAllEnrollments,
   getEnrollmentById,
+  getMyEnrollments,
   getOfferingEnrollments,
   updateEnrollmentStatus,
+  dropEnrollment,
 } from "../api/enrollment.api";
 import type {
   GetEnrollmentsQuery,
@@ -53,6 +55,25 @@ export function useUpdateEnrollmentStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["enrollments"] });
       queryClient.invalidateQueries({ queryKey: ["course-offerings"] });
+    },
+  });
+}
+
+export function useGetMyEnrollments(params?: GetEnrollmentsQuery) {
+  return useQuery({
+    queryKey: ["enrollments", "my", params],
+    queryFn: () => getMyEnrollments(params),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useDropEnrollment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => dropEnrollment(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["enrollments"] });
     },
   });
 }

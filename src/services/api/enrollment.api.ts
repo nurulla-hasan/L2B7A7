@@ -31,3 +31,15 @@ export function updateEnrollmentStatus(
     body: payload,
   });
 }
+
+export function getMyEnrollments(params?: GetEnrollmentsQuery) {
+  return apiClient<ApiResponse<EnrollmentItem[]>>("/enrollments/my", {
+    query: params,
+  });
+}
+
+export function dropEnrollment(id: string) {
+  return apiClient<ApiResponse<EnrollmentItem>>(`/enrollments/${id}/drop`, {
+    method: "PATCH",
+  });
+}
