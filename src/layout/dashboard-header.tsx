@@ -46,7 +46,7 @@ export function DashboardHeader() {
   const handleLogout = () => {
     logout(undefined, {
       onSuccess: () => {
-        successToast("Logged Out", "You have been safely signed out.");
+        successToast("You have been safely signed out.");
         router.replace("/login");
       },
       onError: () => {

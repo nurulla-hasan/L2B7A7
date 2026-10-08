@@ -5,42 +5,30 @@ import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import { FetchError } from "ofetch";
-import type { ReactNode } from "react";
+import { ReactNode } from "react";
 
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60 * 1000,
-
-        retry: (failureCount, error) => {
-          const status =
-            error instanceof FetchError ? error.response?.status : undefined;
-
-          if (status === 401 || status === 403) {
-            return false;
-          }
-
-          return failureCount < 2;
-        },
+        staleTime: 5 * 60 * 1000, // 5 minutes
       },
     },
   });
 }
 
-let browserQueryClient: QueryClient | undefined;
+let browserQueryClient: QueryClient | undefined = undefined;
 
 function getQueryClient() {
   if (environmentManager.isServer()) {
     return makeQueryClient();
-  }
+  } else {
+    if (!browserQueryClient) {
+      browserQueryClient = makeQueryClient();
+    }
 
-  if (!browserQueryClient) {
-    browserQueryClient = makeQueryClient();
+    return browserQueryClient;
   }
-
-  return browserQueryClient;
 }
 
 export default function QueryProvider({ children }: { children: ReactNode }) {

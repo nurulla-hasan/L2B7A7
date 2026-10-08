@@ -85,7 +85,7 @@ export default function AuditList() {
             <SelectTrigger className="w-44 cursor-pointer">
               <SelectValue placeholder="Action">
                 {(val) =>
-                  ACTION_OPTIONS.find((opt) => opt.value === val)?.label
+                  ACTION_OPTIONS.find((opt) => opt.value === val)?.label || "All Actions"  
                 }
               </SelectValue>
             </SelectTrigger>

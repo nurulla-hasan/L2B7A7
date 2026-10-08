@@ -2,16 +2,13 @@ import * as React from "react";
 import { GraduationCap, ShieldCheck, Zap, CreditCard } from "lucide-react";
 import { Logo } from "@/components/common/logo";
 import { ThemeToggle } from "@/components/common/theme-toggle";
-import PublicGuard from "@/components/auth/public-guard";
-
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <PublicGuard>
-      <div className="min-h-screen w-full grid lg:grid-cols-2 bg-background">
+    <div className="min-h-screen w-full grid lg:grid-cols-2 bg-background">
       {/* Left Column: Visual & University Branding (Responsive and theme-token powered) */}
       <div className="relative hidden lg:flex flex-col justify-between p-12 bg-muted/40 border-r border-border overflow-hidden">
         {/* Subtle Decorative Background Glow using theme tokens */}
@@ -88,6 +85,5 @@ export default function AuthLayout({
         </div>
       </div>
     </div>
-    </PublicGuard>
   );
 }

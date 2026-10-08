@@ -112,8 +112,11 @@ export function useLogout() {
   return useMutation({
     mutationFn: logoutUser,
     onSuccess: () => {
+      queryClient.cancelQueries();
       queryClient.setQueryData(["auth", "me"], null);
-      queryClient.clear();
+      queryClient.removeQueries({
+        predicate: (query) => query.queryKey[0] !== "auth",
+      });
     },
   });
 }
