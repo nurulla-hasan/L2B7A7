@@ -70,13 +70,13 @@ export interface PaymentItem {
 }
 
 export interface GetPaymentsQuery {
-  page?: number;
-  limit?: number;
-  status?: PaymentStatus;
-  gateway?: PaymentGateway;
+  page?: number | string;
+  limit?: number | string;
+  status?: PaymentStatus | string;
+  gateway?: PaymentGateway | string;
   semesterId?: string;
   searchTerm?: string;
-  sortBy?: PaymentSortBy;
+  sortBy?: PaymentSortBy | string;
 }
 
 export interface PaymentsApiResponse {

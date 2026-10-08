@@ -44,14 +44,14 @@ export type EnrollmentSortBy =
   | "status_desc";
 
 export interface GetEnrollmentsQuery {
-  page?: number;
-  limit?: number;
-  status?: EnrollmentStatus;
+  page?: number | string;
+  limit?: number | string;
+  status?: EnrollmentStatus | string;
   studentId?: string;
   courseOfferingId?: string;
   semesterId?: string;
   searchTerm?: string;
-  sortBy?: EnrollmentSortBy;
+  sortBy?: EnrollmentSortBy | string;
 }
 
 export interface UpdateEnrollmentStatusPayload {

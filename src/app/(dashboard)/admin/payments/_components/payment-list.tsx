@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   Banknote,
   CreditCard,
@@ -21,7 +20,7 @@ import {
 import { useStateFilter } from "@/hooks";
 import { useGetAllPayments, useGetSemesters } from "@/services";
 import { getErrorMessage } from "@/lib/error";
-import type { PaymentSortBy, PaymentStatus } from "@/types";
+import type { PaymentSortBy } from "@/types";
 import { paymentColumns } from "./payment-column";
 
 const SORT_OPTIONS: { label: string; value: PaymentSortBy }[] = [
@@ -40,29 +39,10 @@ const STATUS_OPTIONS: { label: string; value: string }[] = [
 ];
 
 export default function PaymentList() {
-  const filter = useStateFilter<string>({
-    paginationKey: "page",
-    initialValues: {
-      page: 1,
-      limit: 10,
-      sortBy: "newest",
-    },
-  });
+  const filter = useStateFilter();
 
   const { data: semestersRes } = useGetSemesters({ limit: 100 });
   const semesters = semestersRes?.data ?? [];
-
-  const queryParams = React.useMemo(() => {
-    const raw = filter.filters;
-    return {
-      page: raw.page ? Number(raw.page) : 1,
-      limit: raw.limit ? Number(raw.limit) : 10,
-      searchTerm: raw.searchTerm || undefined,
-      semesterId: raw.semesterId || undefined,
-      status: (raw.status as PaymentStatus) || undefined,
-      sortBy: (raw.sortBy as PaymentSortBy) || "newest",
-    };
-  }, [filter.filters]);
 
   const {
     data: response,
@@ -71,31 +51,23 @@ export default function PaymentList() {
     isError,
     error,
     refetch,
-  } = useGetAllPayments(queryParams);
+  } = useGetAllPayments(filter.filters);
 
-  const payments = React.useMemo(
-    () => response?.data ?? [],
-    [response?.data]
-  );
+  const payments = response?.data ?? [];
   const meta = response?.meta;
 
-  // Financial Stats Calculation from loaded dataset
-  const { totalRevenue, paidCount, pendingCount } = React.useMemo(() => {
-    let revenue = 0;
-    let paid = 0;
-    let pending = 0;
+  let totalRevenue = 0;
+  let paidCount = 0;
+  let pendingCount = 0;
 
-    for (const p of payments) {
-      if (p.status === "PAID") {
-        revenue += p.amount;
-        paid += 1;
-      } else if (p.status === "PENDING") {
-        pending += 1;
-      }
+  for (const p of payments) {
+    if (p.status === "PAID") {
+      totalRevenue += p.amount;
+      paidCount += 1;
+    } else if (p.status === "PENDING") {
+      pendingCount += 1;
     }
-
-    return { totalRevenue: revenue, paidCount: paid, pendingCount: pending };
-  }, [payments]);
+  }
 
   return (
     <div className="space-y-6">
@@ -175,7 +147,7 @@ export default function PaymentList() {
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Status Filter */}
           <Select
-            value={filter.getFilter("status") || "all"}
+            value={filter.getFilter("status")}
             onValueChange={(val) =>
               filter.updateFilter("status", !val || val === "all" ? null : val)
             }
@@ -203,7 +175,7 @@ export default function PaymentList() {
 
           {/* Semester Filter */}
           <Select
-            value={filter.getFilter("semesterId") || "all"}
+            value={filter.getFilter("semesterId")}
             onValueChange={(val) =>
               filter.updateFilter(
                 "semesterId",
@@ -239,7 +211,7 @@ export default function PaymentList() {
 
           {/* Sort By Filter */}
           <Select
-            value={(filter.getFilter("sortBy") as PaymentSortBy) || "newest"}
+            value={filter.getFilter("sortBy")}
             onValueChange={(val) => {
               if (val) filter.updateFilter("sortBy", val);
             }}

@@ -39,11 +39,11 @@ export interface CourseItem {
 }
 
 export interface GetCoursesQuery {
-  page?: number;
-  limit?: number;
+  page?: number | string;
+  limit?: number | string;
   searchTerm?: string;
-  credits?: number;
-  sortBy?: CourseSortBy;
+  credits?: number | string;
+  sortBy?: CourseSortBy | string;
 }
 
 export interface CreateCoursePayload {

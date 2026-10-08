@@ -11,7 +11,7 @@ import type {
   UserItem,
 } from "@/types";
 
-export function getUsers(params?: GetUsersQuery | Record<string, unknown>) {
+export function getUsers(params?: GetUsersQuery) {
   return apiClient<ApiResponse<UserItem[]>>("/users", {
     query: params,
   });

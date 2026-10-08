@@ -30,8 +30,8 @@ export interface AuditLogItem {
 }
 
 export interface GetAuditLogsQuery {
-  page?: number;
-  limit?: number;
+  page?: number | string;
+  limit?: number | string;
   searchTerm?: string;
   action?: AuditActionType | string;
   resource?: string;

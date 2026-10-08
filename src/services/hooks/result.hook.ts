@@ -20,9 +20,7 @@ import type {
   UpdateResultPayload,
 } from "@/types";
 
-export function useGetAllResults(
-  params?: GetResultsQuery | Record<string, unknown>
-) {
+export function useGetAllResults(params?: GetResultsQuery) {
   return useQuery({
     queryKey: ["results", params],
     queryFn: () => getAllResults(params),

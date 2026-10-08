@@ -21,7 +21,6 @@ export interface GetUsersQuery {
   page?: number | string;
   limit?: number | string;
   sortBy?: string;
-  [key: string]: unknown;
 }
 
 export interface CreateAdminPayload {

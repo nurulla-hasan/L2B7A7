@@ -10,13 +10,7 @@ import { userColumns } from "./user-column";
 import { DataTable } from "@/components/common/data-table";
 
 export default function UsersList() {
-  const filter = useStateFilter<string>({
-    paginationKey: "page",
-    initialValues: {
-      page: 1,
-      limit: 10,
-    },
-  });
+  const filter = useStateFilter();
 
   const {
     data: response,

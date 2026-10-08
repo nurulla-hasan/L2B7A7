@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { SectionHeading } from "@/components/common/section-heading";
 import { SearchInput } from "@/components/common/search-input";
 import { DataTable } from "@/components/common/data-table";
@@ -14,7 +13,7 @@ import {
 import { useStateFilter } from "@/hooks";
 import { useGetAllEnrollments, useGetSemesters } from "@/services";
 import { getErrorMessage } from "@/lib/error";
-import type { EnrollmentSortBy, EnrollmentStatus } from "@/types";
+import type { EnrollmentSortBy } from "@/types";
 import { enrollmentColumns } from "./enrollment-column";
 
 const SORT_OPTIONS: { label: string; value: EnrollmentSortBy }[] = [
@@ -32,29 +31,10 @@ const STATUS_OPTIONS: { label: string; value: string }[] = [
 ];
 
 export default function EnrollmentList() {
-  const filter = useStateFilter<string>({
-    paginationKey: "page",
-    initialValues: {
-      page: 1,
-      limit: 10,
-      sortBy: "newest",
-    },
-  });
+  const filter = useStateFilter();
 
   const { data: semestersRes } = useGetSemesters({ limit: 100 });
   const semesters = semestersRes?.data ?? [];
-
-  const queryParams = React.useMemo(() => {
-    const raw = filter.filters;
-    return {
-      page: raw.page ? Number(raw.page) : 1,
-      limit: raw.limit ? Number(raw.limit) : 10,
-      searchTerm: raw.searchTerm || undefined,
-      semesterId: raw.semesterId || undefined,
-      status: (raw.status as EnrollmentStatus) || undefined,
-      sortBy: (raw.sortBy as EnrollmentSortBy) || "newest",
-    };
-  }, [filter.filters]);
 
   const {
     data: response,
@@ -63,7 +43,7 @@ export default function EnrollmentList() {
     isError,
     error,
     refetch,
-  } = useGetAllEnrollments(queryParams);
+  } = useGetAllEnrollments(filter.filters);
 
   const enrollments = response?.data ?? [];
   const meta = response?.meta;
@@ -91,7 +71,7 @@ export default function EnrollmentList() {
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Status Filter */}
           <Select
-            value={filter.getFilter("status") || "all"}
+            value={filter.getFilter("status")}
             onValueChange={(val) =>
               filter.updateFilter("status", !val || val === "all" ? null : val)
             }
@@ -119,7 +99,7 @@ export default function EnrollmentList() {
 
           {/* Semester Filter */}
           <Select
-            value={filter.getFilter("semesterId") || "all"}
+            value={filter.getFilter("semesterId")}
             onValueChange={(val) =>
               filter.updateFilter(
                 "semesterId",
@@ -154,7 +134,7 @@ export default function EnrollmentList() {
 
           {/* Sort By Filter */}
           <Select
-            value={(filter.getFilter("sortBy") as EnrollmentSortBy) || "newest"}
+            value={filter.getFilter("sortBy")}
             onValueChange={(val) => {
               if (val) filter.updateFilter("sortBy", val);
             }}

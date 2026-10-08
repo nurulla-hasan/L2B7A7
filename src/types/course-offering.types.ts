@@ -57,14 +57,14 @@ export type CourseOfferingSortBy =
   | "capacity_desc";
 
 export interface GetCourseOfferingsQuery {
-  page?: number;
-  limit?: number;
+  page?: number | string;
+  limit?: number | string;
   searchTerm?: string;
   semesterId?: string;
   courseId?: string;
   teacherId?: string;
   section?: string;
-  sortBy?: CourseOfferingSortBy;
+  sortBy?: CourseOfferingSortBy | string;
 }
 
 export interface CreateCourseOfferingPayload {

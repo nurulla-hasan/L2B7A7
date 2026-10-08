@@ -5,9 +5,7 @@ import type {
   PaymentItem,
 } from "@/types";
 
-export function getAllPayments(
-  params?: GetPaymentsQuery | Record<string, unknown>
-) {
+export function getAllPayments(params?: GetPaymentsQuery) {
   return apiClient<ApiResponse<PaymentItem[]>>("/payments", {
     query: params,
   });
@@ -17,7 +15,7 @@ export function getPaymentById(id: string) {
   return apiClient<ApiResponse<PaymentItem>>(`/payments/${id}`);
 }
 
-export function getMyPayments(params?: Record<string, unknown>) {
+export function getMyPayments(params?: GetPaymentsQuery) {
   return apiClient<ApiResponse<PaymentItem[]>>("/payments/my", {
     query: params,
   });

@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { SectionHeading } from "@/components/common/section-heading";
 import { SearchInput } from "@/components/common/search-input";
 import { DataTable } from "@/components/common/data-table";
@@ -32,25 +31,7 @@ const SORT_OPTIONS: { label: string; value: CourseSortBy }[] = [
 ];
 
 export default function CoursesList() {
-  const filter = useStateFilter<string>({
-    paginationKey: "page",
-    initialValues: {
-      page: 1,
-      limit: 10,
-      sortBy: "newest",
-    },
-  });
-
-  const queryParams = React.useMemo(() => {
-    const raw = filter.filters;
-    return {
-      page: raw.page ? Number(raw.page) : 1,
-      limit: raw.limit ? Number(raw.limit) : 10,
-      searchTerm: raw.searchTerm || undefined,
-      credits: raw.credits ? Number(raw.credits) : undefined,
-      sortBy: (raw.sortBy as CourseSortBy) || "newest",
-    };
-  }, [filter.filters]);
+  const filter = useStateFilter();
 
   const {
     data: response,
@@ -59,7 +40,7 @@ export default function CoursesList() {
     isError,
     error,
     refetch,
-  } = useGetCourses(queryParams);
+  } = useGetCourses(filter.filters);
 
   const courses = response?.data ?? [];
   const meta = response?.meta;
@@ -89,7 +70,7 @@ export default function CoursesList() {
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Credits Filter */}
           <Select
-            value={filter.getFilter("credits") || "all"}
+            value={filter.getFilter("credits")}
             onValueChange={(val) =>
               filter.updateFilter(
                 "credits",
@@ -115,7 +96,7 @@ export default function CoursesList() {
 
           {/* Sort By Filter */}
           <Select
-            value={(filter.getFilter("sortBy") as CourseSortBy) || "newest"}
+            value={filter.getFilter("sortBy")}
             onValueChange={(val) => {
               if (val) filter.updateFilter("sortBy", val);
             }}

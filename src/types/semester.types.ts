@@ -15,11 +15,11 @@ export interface SemesterItem {
 }
 
 export interface GetSemestersQuery {
-  page?: number;
-  limit?: number;
+  page?: number | string;
+  limit?: number | string;
   searchTerm?: string;
-  year?: number;
-  sortBy?: SemesterSortBy;
+  year?: number | string;
+  sortBy?: SemesterSortBy | string;
 }
 
 export interface CreateSemesterPayload {

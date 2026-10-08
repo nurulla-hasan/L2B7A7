@@ -17,9 +17,7 @@ import type {
   UpdateCourseOfferingPayload,
 } from "@/types";
 
-export function useGetCourseOfferings(
-  params?: GetCourseOfferingsQuery | Record<string, unknown>
-) {
+export function useGetCourseOfferings(params?: GetCourseOfferingsQuery) {
   return useQuery({
     queryKey: ["course-offerings", params],
     queryFn: () => getCourseOfferings(params),

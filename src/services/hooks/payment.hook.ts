@@ -9,9 +9,7 @@ import {
 } from "../api/payment.api";
 import type { GetPaymentsQuery } from "@/types";
 
-export function useGetAllPayments(
-  params?: GetPaymentsQuery | Record<string, unknown>
-) {
+export function useGetAllPayments(params?: GetPaymentsQuery) {
   return useQuery({
     queryKey: ["payments", params],
     queryFn: () => getAllPayments(params),
@@ -27,7 +25,7 @@ export function useGetPaymentById(id: string, enabled = true) {
   });
 }
 
-export function useGetMyPayments(params?: Record<string, unknown>) {
+export function useGetMyPayments(params?: GetPaymentsQuery) {
   return useQuery({
     queryKey: ["payments", "my", params],
     queryFn: () => getMyPayments(params),

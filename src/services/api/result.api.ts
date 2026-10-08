@@ -9,9 +9,7 @@ import type {
   UpdateResultPayload,
 } from "@/types";
 
-export function getAllResults(
-  params?: GetResultsQuery | Record<string, unknown>
-) {
+export function getAllResults(params?: GetResultsQuery) {
   return apiClient<ResultsApiResponse>("/results", {
     query: params,
   });

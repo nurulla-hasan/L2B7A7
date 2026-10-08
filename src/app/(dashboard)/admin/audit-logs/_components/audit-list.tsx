@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { SectionHeading } from "@/components/common/section-heading";
 import { SearchInput } from "@/components/common/search-input";
 import { DataTable } from "@/components/common/data-table";
@@ -41,27 +40,7 @@ const RESOURCE_OPTIONS: { label: string; value: string }[] = [
 ];
 
 export default function AuditList() {
-  const filter = useStateFilter<string>({
-    paginationKey: "page",
-    initialValues: {
-      page: 1,
-      limit: 10,
-    },
-  });
-
-  const queryParams = React.useMemo(() => {
-    const raw = filter.filters;
-    const act = raw.action;
-    const res = raw.resource;
-
-    return {
-      page: raw.page ? Number(raw.page) : 1,
-      limit: raw.limit ? Number(raw.limit) : 10,
-      searchTerm: raw.searchTerm || undefined,
-      action: act && act !== "all" ? act : undefined,
-      resource: res && res !== "all" ? res : undefined,
-    };
-  }, [filter.filters]);
+  const filter = useStateFilter();
 
   const {
     data: response,
@@ -70,12 +49,9 @@ export default function AuditList() {
     isError,
     error,
     refetch,
-  } = useGetAllAuditLogs(queryParams);
+  } = useGetAllAuditLogs(filter.filters);
 
-  const logs = React.useMemo(
-    () => response?.data ?? [],
-    [response?.data]
-  );
+  const logs = response?.data ?? [];
   const meta = response?.meta;
 
   return (
@@ -101,7 +77,7 @@ export default function AuditList() {
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Action Filter */}
           <Select
-            value={filter.getFilter("action") || "all"}
+            value={filter.getFilter("action")}
             onValueChange={(val) =>
               filter.updateFilter("action", !val || val === "all" ? null : val)
             }
@@ -109,8 +85,7 @@ export default function AuditList() {
             <SelectTrigger className="w-44 cursor-pointer">
               <SelectValue placeholder="Action">
                 {(val) =>
-                  ACTION_OPTIONS.find((opt) => opt.value === val)?.label ||
-                  "All Actions"
+                  ACTION_OPTIONS.find((opt) => opt.value === val)?.label
                 }
               </SelectValue>
             </SelectTrigger>
@@ -129,7 +104,7 @@ export default function AuditList() {
 
           {/* Resource Filter */}
           <Select
-            value={filter.getFilter("resource") || "all"}
+            value={filter.getFilter("resource")}
             onValueChange={(val) =>
               filter.updateFilter(
                 "resource",

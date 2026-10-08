@@ -7,9 +7,7 @@ import type {
   UpdateSemesterPayload,
 } from "@/types";
 
-export function getSemesters(
-  params?: GetSemestersQuery | Record<string, unknown>
-) {
+export function getSemesters(params?: GetSemestersQuery) {
   return apiClient<ApiResponse<SemesterItem[]>>("/semesters", {
     query: params,
   });

@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { SectionHeading } from "@/components/common/section-heading";
 import { SearchInput } from "@/components/common/search-input";
 import { DataTable } from "@/components/common/data-table";
@@ -32,32 +31,13 @@ const SORT_OPTIONS: { label: string; value: CourseOfferingSortBy }[] = [
 ];
 
 export default function CourseOfferingsList() {
-  const filter = useStateFilter<string>({
-    paginationKey: "page",
-    initialValues: {
-      page: 1,
-      limit: 10,
-      sortBy: "newest",
-    },
-  });
+  const filter = useStateFilter();
 
   const { data: semestersRes } = useGetSemesters({ limit: 100 });
   const { data: coursesRes } = useGetCourses({ limit: 100 });
 
   const semesters = semestersRes?.data ?? [];
   const courses = coursesRes?.data ?? [];
-
-  const queryParams = React.useMemo(() => {
-    const raw = filter.filters;
-    return {
-      page: raw.page ? Number(raw.page) : 1,
-      limit: raw.limit ? Number(raw.limit) : 10,
-      searchTerm: raw.searchTerm || undefined,
-      semesterId: raw.semesterId || undefined,
-      courseId: raw.courseId || undefined,
-      sortBy: (raw.sortBy as CourseOfferingSortBy) || "newest",
-    };
-  }, [filter.filters]);
 
   const {
     data: response,
@@ -66,7 +46,7 @@ export default function CourseOfferingsList() {
     isError,
     error,
     refetch,
-  } = useGetCourseOfferings(queryParams);
+  } = useGetCourseOfferings(filter.filters);
 
   const offerings = response?.data ?? [];
   const meta = response?.meta;
@@ -96,7 +76,7 @@ export default function CourseOfferingsList() {
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Semester Filter */}
           <Select
-            value={filter.getFilter("semesterId") || "all"}
+            value={filter.getFilter("semesterId")}
             onValueChange={(val) =>
               filter.updateFilter(
                 "semesterId",
@@ -131,7 +111,7 @@ export default function CourseOfferingsList() {
 
           {/* Course Filter */}
           <Select
-            value={filter.getFilter("courseId") || "all"}
+            value={filter.getFilter("courseId")}
             onValueChange={(val) =>
               filter.updateFilter(
                 "courseId",
@@ -166,9 +146,7 @@ export default function CourseOfferingsList() {
 
           {/* Sort By Filter */}
           <Select
-            value={
-              (filter.getFilter("sortBy") as CourseOfferingSortBy) || "newest"
-            }
+            value={filter.getFilter("sortBy")}
             onValueChange={(val) => {
               if (val) filter.updateFilter("sortBy", val);
             }}

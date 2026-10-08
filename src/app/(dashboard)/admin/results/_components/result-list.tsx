@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Send } from "lucide-react";
 
 import { SectionHeading } from "@/components/common/section-heading";
@@ -27,25 +26,7 @@ const STATUS_OPTIONS: { label: string; value: string }[] = [
 ];
 
 export default function ResultList() {
-  const filter = useStateFilter<string>({
-    paginationKey: "page",
-    initialValues: {
-      page: 1,
-      limit: 10,
-    },
-  });
-
-  const queryParams = React.useMemo(() => {
-    const raw = filter.filters;
-    const pub = raw.published;
-    return {
-      page: raw.page ? Number(raw.page) : 1,
-      limit: raw.limit ? Number(raw.limit) : 10,
-      searchTerm: raw.searchTerm || undefined,
-      published:
-        pub === "true" ? true : pub === "false" ? false : undefined,
-    };
-  }, [filter.filters]);
+  const filter = useStateFilter();
 
   const {
     data: response,
@@ -54,17 +35,13 @@ export default function ResultList() {
     isError,
     error,
     refetch,
-  } = useGetAllResults(queryParams);
+  } = useGetAllResults(filter.filters);
 
   const publishMutation = usePublishResults();
 
-  const results = React.useMemo(
-    () => response?.data ?? [],
-    [response?.data]
-  );
+  const results = response?.data ?? [];
   const meta = response?.meta;
 
-  // Total draft results across system from meta
   const draftCount = meta?.draftCount ?? 0;
 
   const handleBulkPublish = () => {
@@ -121,7 +98,7 @@ export default function ResultList() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           <Select
-            value={filter.getFilter("published") || "all"}
+            value={filter.getFilter("published")}
             onValueChange={(val) =>
               filter.updateFilter(
                 "published",

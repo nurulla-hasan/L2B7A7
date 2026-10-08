@@ -6,9 +6,7 @@ import type {
   UpdateEnrollmentStatusPayload,
 } from "@/types";
 
-export function getAllEnrollments(
-  params?: GetEnrollmentsQuery | Record<string, unknown>
-) {
+export function getAllEnrollments(params?: GetEnrollmentsQuery) {
   return apiClient<ApiResponse<EnrollmentItem[]>>("/enrollments", {
     query: params,
   });

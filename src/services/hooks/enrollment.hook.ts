@@ -15,9 +15,7 @@ import type {
   UpdateEnrollmentStatusPayload,
 } from "@/types";
 
-export function useGetAllEnrollments(
-  params?: GetEnrollmentsQuery | Record<string, unknown>
-) {
+export function useGetAllEnrollments(params?: GetEnrollmentsQuery) {
   return useQuery({
     queryKey: ["enrollments", params],
     queryFn: () => getAllEnrollments(params),

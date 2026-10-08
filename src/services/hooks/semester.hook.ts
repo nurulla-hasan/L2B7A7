@@ -17,9 +17,7 @@ import type {
   UpdateSemesterPayload,
 } from "@/types";
 
-export function useGetSemesters(
-  params?: GetSemestersQuery | Record<string, unknown>
-) {
+export function useGetSemesters(params?: GetSemestersQuery) {
   return useQuery({
     queryKey: ["semesters", params],
     queryFn: () => getSemesters(params),

@@ -7,7 +7,7 @@ import type {
   UpdateCoursePayload,
 } from "@/types";
 
-export function getCourses(params?: GetCoursesQuery | Record<string, unknown>) {
+export function getCourses(params?: GetCoursesQuery) {
   return apiClient<ApiResponse<CourseItem[]>>("/courses", {
     query: params,
   });

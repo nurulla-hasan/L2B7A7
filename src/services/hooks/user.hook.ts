@@ -16,7 +16,7 @@ import type {
   UpdateUserStatusPayload,
 } from "@/types";
 
-export function useGetUsers(params?: GetUsersQuery | Record<string, unknown>) {
+export function useGetUsers(params?: GetUsersQuery) {
   return useQuery({
     queryKey: ["users", params],
     queryFn: () => getUsers(params),

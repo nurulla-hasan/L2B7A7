@@ -64,8 +64,8 @@ export interface ResultItem {
 }
 
 export interface GetResultsQuery {
-  page?: number;
-  limit?: number;
+  page?: number | string;
+  limit?: number | string;
   searchTerm?: string;
   published?: boolean | string;
 }
