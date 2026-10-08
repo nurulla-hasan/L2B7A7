@@ -1,11 +1,14 @@
 import {
   useQuery,
+  useMutation,
+  useQueryClient,
   keepPreviousData,
 } from "@tanstack/react-query";
 import {
   getAllPayments,
   getPaymentById,
   getMyPayments,
+  initiateBkashPayment,
 } from "../api/payment.api";
 import type { GetPaymentsQuery } from "@/types";
 
@@ -32,3 +35,17 @@ export function useGetMyPayments(params?: GetPaymentsQuery) {
     placeholderData: keepPreviousData,
   });
 }
+
+export function useInitiateBkashPayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { enrollmentId: string }) =>
+      initiateBkashPayment(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      queryClient.invalidateQueries({ queryKey: ["enrollments"] });
+    },
+  });
+}
+

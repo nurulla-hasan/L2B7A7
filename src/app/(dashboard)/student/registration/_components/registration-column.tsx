@@ -1,12 +1,15 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
 import { PlusCircle, CreditCard, Users } from "lucide-react";
 
 import type { CourseOfferingItem } from "@/types";
-import { useGetMyEnrollments, useEnrollCourse } from "@/services";
+import {
+  useGetMyEnrollments,
+  useEnrollCourse,
+  useInitiateBkashPayment,
+} from "@/services";
 import { ConfirmationModal } from "@/components/common/confirmation-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +24,8 @@ function RegistrationActionsCell({
 }) {
   const { data: myEnrollmentsRes } = useGetMyEnrollments({ limit: 100 });
   const { mutateAsync: enroll, isPending: isEnrolling } = useEnrollCourse();
+  const { mutateAsync: initiateBkash, isPending: isInitiating } =
+    useInitiateBkashPayment();
 
   const myEnrollments = myEnrollmentsRes?.data ?? [];
 
@@ -53,6 +58,20 @@ function RegistrationActionsCell({
     }
   };
 
+  const handlePay = async () => {
+    if (!exactEnrollment) return;
+    try {
+      const response = await initiateBkash({
+        enrollmentId: exactEnrollment.id,
+      });
+      if (response?.data?.paymentUrl) {
+        window.location.href = response.data.paymentUrl;
+      }
+    } catch (error) {
+      errorToast(getErrorMessage(error, "Failed to initiate bKash payment"));
+    }
+  };
+
   return (
     <div className="flex items-center justify-end gap-2">
       {exactEnrollment ? (
@@ -61,12 +80,20 @@ function RegistrationActionsCell({
         ) : (
           <div className="flex items-center gap-1.5">
             <Badge variant="warning">Pending Payment</Badge>
-            <Button
-              render={<Link href="/student/payments" />}
-            >
-              <CreditCard />
-              Pay
-            </Button>
+            <ConfirmationModal
+              title="Pay Tuition Fee"
+              description={`Pay tuition fee of ৳${Number(offering.fee).toLocaleString()} for ${offering.course.code} Section ${offering.section} via secure bKash checkout.`}
+              confirmText="Pay with bKash"
+              loadingText="Redirecting to bKash..."
+              isLoading={isInitiating}
+              onConfirm={handlePay}
+              trigger={
+                <Button>
+                  <CreditCard />
+                  Pay
+                </Button>
+              }
+            />
           </div>
         )
       ) : conflictEnrollment ? (

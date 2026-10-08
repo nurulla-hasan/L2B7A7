@@ -50,6 +50,7 @@ export interface PaymentEnrollment {
   id: string;
   studentId: string;
   courseOfferingId: string;
+  status?: string;
   student: PaymentStudent;
   courseOffering: PaymentCourseOffering;
 }

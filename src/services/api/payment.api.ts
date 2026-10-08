@@ -20,3 +20,18 @@ export function getMyPayments(params?: GetPaymentsQuery) {
     query: params,
   });
 }
+
+export function initiateBkashPayment(payload: { enrollmentId: string }) {
+  return apiClient<
+    ApiResponse<{
+      paymentId: string;
+      paymentUrl: string;
+      bkashPaymentId: string;
+      amount: number;
+    }>
+  >("/payments/bkash/initiate", {
+    method: "POST",
+    body: payload,
+  });
+}
+

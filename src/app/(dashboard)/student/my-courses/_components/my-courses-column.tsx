@@ -1,12 +1,11 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Trash2, CreditCard } from "lucide-react";
 
 import type { EnrollmentItem } from "@/types";
-import { useDropEnrollment } from "@/services";
+import { useDropEnrollment, useInitiateBkashPayment } from "@/services";
 import { ConfirmationModal } from "@/components/common/confirmation-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +19,8 @@ function MyCourseActionsCell({
   enrollment: EnrollmentItem;
 }) {
   const { mutateAsync: dropCourse, isPending: isDropping } = useDropEnrollment();
+  const { mutateAsync: initiateBkash, isPending: isInitiating } =
+    useInitiateBkashPayment();
 
   const offering = enrollment.courseOffering;
   const course = offering.course;
@@ -38,15 +39,38 @@ function MyCourseActionsCell({
     }
   };
 
+  const handlePay = async () => {
+    try {
+      const response = await initiateBkash({
+        enrollmentId: enrollment.id,
+      });
+      if (response?.data?.paymentUrl) {
+        window.location.href = response.data.paymentUrl;
+      }
+    } catch (error) {
+      errorToast(getErrorMessage(error, "Failed to initiate bKash payment"));
+    }
+  };
+
   return (
     <div className="flex items-center justify-end gap-2">
       <CourseDetailsModal enrollment={enrollment} />
 
       {isPendingPayment && (
-        <Button render={<Link href="/student/payments" />}>
-          <CreditCard />
-          Pay Fee
-        </Button>
+        <ConfirmationModal
+          title="Pay Tuition Fee"
+          description={`Pay tuition fee of ৳${Number(offering.fee).toLocaleString()} for ${course.code} (${course.title}) Section ${offering.section} via secure bKash checkout.`}
+          confirmText="Pay with bKash"
+          loadingText="Redirecting to bKash..."
+          isLoading={isInitiating}
+          onConfirm={handlePay}
+          trigger={
+            <Button>
+              <CreditCard />
+              Pay Fee
+            </Button>
+          }
+        />
       )}
 
       {!isDropped && (
