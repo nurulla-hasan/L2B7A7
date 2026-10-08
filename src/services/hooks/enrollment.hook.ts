@@ -11,6 +11,7 @@ import {
   getOfferingEnrollments,
   updateEnrollmentStatus,
   dropEnrollment,
+  enrollCourse,
 } from "../api/enrollment.api";
 import type {
   GetEnrollmentsQuery,
@@ -77,3 +78,16 @@ export function useDropEnrollment() {
     },
   });
 }
+
+export function useEnrollCourse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { courseOfferingId: string }) => enrollCourse(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["course-offerings"] });
+    },
+  });
+}
+

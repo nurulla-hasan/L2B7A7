@@ -43,3 +43,11 @@ export function dropEnrollment(id: string) {
     method: "PATCH",
   });
 }
+
+export function enrollCourse(payload: { courseOfferingId: string }) {
+  return apiClient<ApiResponse<EnrollmentItem>>("/enrollments", {
+    method: "POST",
+    body: payload,
+  });
+}
+

@@ -21,26 +21,21 @@ function EnrollmentActionsCell({
 }: {
   enrollment: EnrollmentItem;
 }) {
-  const { mutate: updateStatus, isPending } = useUpdateEnrollmentStatus();
+  const { mutateAsync: updateStatus, isPending } = useUpdateEnrollmentStatus();
 
-  const handleDrop = () => {
-    updateStatus(
-      {
+  const handleDrop = async () => {
+    try {
+      await updateStatus({
         id: enrollment.id,
         payload: { status: "DROPPED" },
-      },
-      {
-        onSuccess: () => {
-          successToast(
-            "Enrollment dropped",
-            `${enrollment.student.name} has been administratively dropped from ${enrollment.courseOffering.course.code} Section ${enrollment.courseOffering.section}.`
-          );
-        },
-        onError: (error) => {
-          errorToast(getErrorMessage(error, "Failed to drop enrollment"));
-        },
-      }
-    );
+      });
+      successToast(
+        "Enrollment dropped",
+        `${enrollment.student.name} has been administratively dropped from ${enrollment.courseOffering.course.code} Section ${enrollment.courseOffering.section}.`
+      );
+    } catch (error) {
+      errorToast(getErrorMessage(error, "Failed to drop enrollment"));
+    }
   };
 
   const isDropped = enrollment.status === "DROPPED";

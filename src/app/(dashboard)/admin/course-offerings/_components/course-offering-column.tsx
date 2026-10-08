@@ -19,23 +19,19 @@ function CourseOfferingActionsCell({
 }: {
   offering: CourseOfferingItem;
 }) {
-  const { mutate: deleteOffering, isPending: isDeleting } =
+  const { mutateAsync: deleteOffering, isPending: isDeleting } =
     useDeleteCourseOffering();
 
-  const handleDelete = () => {
-    deleteOffering(offering.id, {
-      onSuccess: () => {
-        successToast(
-          "Course offering deleted",
-          `${offering.course.code} Section ${offering.section} has been successfully deleted.`
-        );
-      },
-      onError: (error) => {
-        errorToast(
-          getErrorMessage(error, "Failed to delete course offering")
-        );
-      },
-    });
+  const handleDelete = async () => {
+    try {
+      await deleteOffering(offering.id);
+      successToast(
+        "Course offering deleted",
+        `${offering.course.code} Section ${offering.section} has been successfully deleted.`
+      );
+    } catch (error) {
+      errorToast(getErrorMessage(error, "Failed to delete course offering"));
+    }
   };
 
   return (

@@ -17,20 +17,18 @@ import { CourseModal } from "./course-modal";
 import { CourseDetailsModal } from "./course-details-modal";
 
 function CourseActionsCell({ course }: { course: CourseItem }) {
-  const { mutate: deleteCourse, isPending: isDeleting } = useDeleteCourse();
+  const { mutateAsync: deleteCourse, isPending: isDeleting } = useDeleteCourse();
 
-  const handleDelete = () => {
-    deleteCourse(course.id, {
-      onSuccess: () => {
-        successToast(
-          "Course deleted",
-          `Course "${course.title}" (${course.code}) has been successfully deleted.`
-        );
-      },
-      onError: (error) => {
-        errorToast(getErrorMessage(error, "Failed to delete course"));
-      },
-    });
+  const handleDelete = async () => {
+    try {
+      await deleteCourse(course.id);
+      successToast(
+        "Course deleted",
+        `Course "${course.title}" (${course.code}) has been successfully deleted.`
+      );
+    } catch (error) {
+      errorToast(getErrorMessage(error, "Failed to delete course"));
+    }
   };
 
   return (

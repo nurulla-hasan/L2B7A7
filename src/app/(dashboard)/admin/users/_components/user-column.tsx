@@ -14,28 +14,23 @@ import { getErrorMessage } from "@/lib/error";
 import { formatDate, cn } from "@/lib/utils";
 
 function UserActionsCell({ user }: { user: UserItem }) {
-  const { mutate: updateStatus, isPending: isUpdatingStatus } =
+  const { mutateAsync: updateStatus, isPending: isUpdatingStatus } =
     useUpdateUserStatus();
 
-  const handleConfirmStatusChange = () => {
+  const handleConfirmStatusChange = async () => {
     const nextStatus = user.status === "ACTIVE" ? "BLOCKED" : "ACTIVE";
-    updateStatus(
-      {
+    try {
+      await updateStatus({
         id: user.id,
         payload: { status: nextStatus },
-      },
-      {
-        onSuccess: () => {
-          successToast(
-            "User status updated",
-            `${user.name} has been ${nextStatus === "ACTIVE" ? "activated" : "blocked"}.`,
-          );
-        },
-        onError: (error) => {
-          errorToast(getErrorMessage(error, "Failed to update user status"));
-        },
-      },
-    );
+      });
+      successToast(
+        "User status updated",
+        `${user.name} has been ${nextStatus === "ACTIVE" ? "activated" : "blocked"}.`,
+      );
+    } catch (error) {
+      errorToast(getErrorMessage(error, "Failed to update user status"));
+    }
   };
 
   const isBlocked = user.status === "BLOCKED";

@@ -15,20 +15,18 @@ import { formatDate } from "@/lib/utils";
 import { SemesterModal } from "./semester-modal";
 
 function SemesterActionsCell({ semester }: { semester: SemesterItem }) {
-  const { mutate: deleteSemester, isPending: isDeleting } = useDeleteSemester();
+  const { mutateAsync: deleteSemester, isPending: isDeleting } = useDeleteSemester();
 
-  const handleDelete = () => {
-    deleteSemester(semester.id, {
-      onSuccess: () => {
-        successToast(
-          "Semester deleted",
-          `${semester.name} ${semester.year} has been successfully deleted.`
-        );
-      },
-      onError: (error) => {
-        errorToast(getErrorMessage(error, "Failed to delete semester"));
-      },
-    });
+  const handleDelete = async () => {
+    try {
+      await deleteSemester(semester.id);
+      successToast(
+        "Semester deleted",
+        `${semester.name} ${semester.year} has been successfully deleted.`
+      );
+    } catch (error) {
+      errorToast(getErrorMessage(error, "Failed to delete semester"));
+    }
   };
 
   return (

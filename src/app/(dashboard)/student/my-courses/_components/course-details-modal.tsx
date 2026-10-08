@@ -39,7 +39,6 @@ export function CourseDetailsModal({
       title="View Course Details"
     >
       <Eye />
-      Details
     </Button>
   );
 
