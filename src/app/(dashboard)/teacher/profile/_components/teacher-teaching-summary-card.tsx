@@ -120,28 +120,26 @@ export function TeacherTeachingSummaryCard({
         <div className="flex flex-col gap-2 pt-1">
           <Button
             variant="outline"
-            size="sm"
             render={<Link href="/teacher/courses" />}
             className="w-full justify-between"
           >
-            <span className="flex items-center gap-1.5">
-              <BookOpen className="size-3.5" />
+            <span className="flex items-center gap-2">
+              <BookOpen />
               Manage Course Sections
             </span>
-            <ArrowUpRight className="size-3.5" />
+            <ArrowUpRight />
           </Button>
 
           <Button
             variant="outline"
-            size="sm"
             render={<Link href="/teacher/grades" />}
             className="w-full justify-between"
           >
-            <span className="flex items-center gap-1.5">
-              <Award className="size-3.5" />
+            <span className="flex items-center gap-2">
+              <Award />
               Grade Submissions Portal
             </span>
-            <ArrowUpRight className="size-3.5" />
+            <ArrowUpRight />
           </Button>
         </div>
       </CardContent>
