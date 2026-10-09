@@ -94,4 +94,5 @@ export interface UpdateMePayload {
   name?: string;
   phone?: string;
   imageUrl?: string;
+  bio?: string;
 }
