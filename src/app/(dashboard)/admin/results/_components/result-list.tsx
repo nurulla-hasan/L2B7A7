@@ -37,7 +37,7 @@ export default function ResultList() {
     refetch,
   } = useGetAllResults(filter.filters);
 
-  const publishMutation = usePublishResults();
+  const {mutate: publishMutation, isPending} = usePublishResults();
 
   const results = response?.data ?? [];
   const meta = response?.meta;
@@ -47,7 +47,7 @@ export default function ResultList() {
   const handleBulkPublish = () => {
     if (draftCount === 0) return;
 
-    publishMutation.mutate(
+    publishMutation(
       { publishAll: true },
       {
         onSuccess: (res) => {
@@ -75,11 +75,10 @@ export default function ResultList() {
           <Button
             variant="default"
             onClick={handleBulkPublish}
-            loading={publishMutation.isPending}
+            loading={isPending}
             loadingText="Publishing..."
-            className="cursor-pointer gap-1.5"
           >
-            <Send className="size-3.5" />
+            <Send />
             Publish All Drafts ({draftCount})
           </Button>
         )}

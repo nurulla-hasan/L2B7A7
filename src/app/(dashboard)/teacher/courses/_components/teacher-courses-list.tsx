@@ -15,7 +15,6 @@ import { useStateFilter } from "@/hooks";
 import { useGetCourseOfferings, useGetSemesters } from "@/services";
 import { getErrorMessage } from "@/lib/error";
 import type { CourseOfferingSortBy } from "@/types";
-import { TeacherCoursesStats } from "./teacher-courses-stats";
 import { teacherCoursesColumns } from "./teacher-courses-column";
 
 const SORT_OPTIONS: { label: string; value: CourseOfferingSortBy }[] = [
@@ -57,10 +56,7 @@ export function TeacherCoursesList() {
         as="h3"
       />
 
-      {/* 2. Quick Summary KPI Cards */}
-      <TeacherCoursesStats offerings={offerings} isLoading={isLoading} />
-
-      {/* 3. Search & Filter Bar */}
+      {/* 2. Search & Filter Bar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="w-full sm:max-w-xs">
           <SearchInput

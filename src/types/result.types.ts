@@ -68,6 +68,8 @@ export interface GetResultsQuery {
   limit?: number | string;
   searchTerm?: string;
   published?: boolean | string;
+  courseOfferingId?: string;
+  semesterId?: string;
 }
 
 export interface UpdateResultPayload {
