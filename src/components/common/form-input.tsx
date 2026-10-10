@@ -136,15 +136,19 @@ function FormInputField({
             >
               <SelectValue placeholder={placeholder}>
                 {(val) => {
+                  if (!val) {
+                    const emptyOpt = options?.find((opt) => opt.value === "");
+                    return emptyOpt?.label || placeholder;
+                  }
                   const found = options?.find((opt) => opt.value === val);
-                  return found ? found.label : val;
+                  return found?.label || placeholder;
                 }}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {options?.map((opt) => (
                 <SelectItem
-                  key={opt.value}
+                  key={opt.value || "empty-default"}
                   value={opt.value}
                   className="cursor-pointer"
                 >
