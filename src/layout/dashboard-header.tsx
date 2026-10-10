@@ -34,7 +34,7 @@ export function DashboardHeader() {
       ? "/teacher/profile"
       : role === "STUDENT"
       ? "/student/profile"
-      : "/admin/dashboard";
+      : "/admin/profile";
 
   const roleBadgeVariant =
     role === "ADMIN"
