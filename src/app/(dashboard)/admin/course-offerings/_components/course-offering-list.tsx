@@ -2,14 +2,8 @@
 
 import { SectionHeading } from "@/components/common/section-heading";
 import { SearchInput } from "@/components/common/search-input";
+import { FilterSelect } from "@/components/common/filter-select";
 import { DataTable } from "@/components/common/data-table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useStateFilter } from "@/hooks";
 import {
   useGetCourseOfferings,
@@ -51,6 +45,16 @@ export default function CourseOfferingsList() {
   const offerings = response?.data ?? [];
   const meta = response?.meta;
 
+  const semesterOptions = [
+    { label: "All Semesters", value: "all" },
+    ...semesters.map((s) => ({ label: `${s.name} ${s.year}`, value: s.id })),
+  ];
+
+  const courseOptions = [
+    { label: "All Courses", value: "all" },
+    ...courses.map((c) => ({ label: `${c.code} — ${c.title}`, value: c.id })),
+  ];
+
   return (
     <div className="space-y-6">
       <SectionHeading
@@ -75,102 +79,31 @@ export default function CourseOfferingsList() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Semester Filter */}
-          <Select
-            value={filter.getFilter("semesterId")}
-            onValueChange={(val) =>
-              filter.updateFilter(
-                "semesterId",
-                !val || val === "all" ? null : val
-              )
-            }
-          >
-            <SelectTrigger className="w-40 cursor-pointer">
-              <SelectValue placeholder="Semester">
-                {(val) => {
-                  if (val === "all" || !val) return "All Semesters";
-                  const s = semesters.find((item) => item.id === val);
-                  return s ? `${s.name} ${s.year}` : "Semester";
-                }}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              <SelectItem value="all" className="cursor-pointer">
-                All Semesters
-              </SelectItem>
-              {semesters.map((sem) => (
-                <SelectItem
-                  key={sem.id}
-                  value={sem.id}
-                  className="cursor-pointer"
-                >
-                  {sem.name} {sem.year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            filter={filter}
+            filterKey="semesterId"
+            placeholder="All Semesters"
+            options={semesterOptions}
+            className="w-40"
+          />
 
           {/* Course Filter */}
-          <Select
-            value={filter.getFilter("courseId")}
-            onValueChange={(val) =>
-              filter.updateFilter(
-                "courseId",
-                !val || val === "all" ? null : val
-              )
-            }
-          >
-            <SelectTrigger className="w-40 cursor-pointer">
-              <SelectValue placeholder="Course">
-                {(val) => {
-                  if (val === "all" || !val) return "All Courses";
-                  const c = courses.find((item) => item.id === val);
-                  return c ? c.code : "Course";
-                }}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              <SelectItem value="all" className="cursor-pointer">
-                All Courses
-              </SelectItem>
-              {courses.map((course) => (
-                <SelectItem
-                  key={course.id}
-                  value={course.id}
-                  className="cursor-pointer"
-                >
-                  {course.code} — {course.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            filter={filter}
+            filterKey="courseId"
+            placeholder="All Courses"
+            options={courseOptions}
+            className="w-40"
+          />
 
           {/* Sort By Filter */}
-          <Select
-            value={filter.getFilter("sortBy")}
-            onValueChange={(val) => {
-              if (val) filter.updateFilter("sortBy", val);
-            }}
-          >
-            <SelectTrigger className="min-w-44 cursor-pointer">
-              <SelectValue placeholder="Sort by">
-                {(val) =>
-                  SORT_OPTIONS.find((opt) => opt.value === val)?.label ||
-                  "Newest First"
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              {SORT_OPTIONS.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  className="cursor-pointer"
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            filter={filter}
+            filterKey="sortBy"
+            placeholder="Sort by"
+            options={SORT_OPTIONS}
+            className="min-w-44"
+          />
         </div>
       </div>
 

@@ -2,14 +2,8 @@
 
 import { SectionHeading } from "@/components/common/section-heading";
 import { SearchInput } from "@/components/common/search-input";
+import { FilterSelect } from "@/components/common/filter-select";
 import { DataTable } from "@/components/common/data-table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useStateFilter } from "@/hooks";
 import { useGetAllAuditLogs } from "@/services";
 import { getErrorMessage } from "@/lib/error";
@@ -76,62 +70,22 @@ export default function AuditList() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Action Filter */}
-          <Select
-            value={filter.getFilter("action")}
-            onValueChange={(val) =>
-              filter.updateFilter("action", !val || val === "all" ? null : val)
-            }
-          >
-            <SelectTrigger className="w-44 cursor-pointer">
-              <SelectValue placeholder="Action">
-                {(val) =>
-                  ACTION_OPTIONS.find((opt) => opt.value === val)?.label || "All Actions"  
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              {ACTION_OPTIONS.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  className="cursor-pointer"
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            filter={filter}
+            filterKey="action"
+            placeholder="All Actions"
+            options={ACTION_OPTIONS}
+            className="w-44"
+          />
 
           {/* Resource Filter */}
-          <Select
-            value={filter.getFilter("resource")}
-            onValueChange={(val) =>
-              filter.updateFilter(
-                "resource",
-                !val || val === "all" ? null : val
-              )
-            }
-          >
-            <SelectTrigger className="w-40 cursor-pointer">
-              <SelectValue placeholder="Resource">
-                {(val) =>
-                  RESOURCE_OPTIONS.find((opt) => opt.value === val)?.label ||
-                  "All Resources"
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              {RESOURCE_OPTIONS.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  className="cursor-pointer"
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            filter={filter}
+            filterKey="resource"
+            placeholder="All Resources"
+            options={RESOURCE_OPTIONS}
+            className="w-40"
+          />
         </div>
       </div>
 

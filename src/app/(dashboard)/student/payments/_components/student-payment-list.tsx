@@ -8,13 +8,7 @@ import { DataTable } from "@/components/common/data-table";
 import { ConfirmationModal } from "@/components/common/confirmation-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FilterSelect } from "@/components/common/filter-select";
 import { useStateFilter } from "@/hooks";
 import {
   useGetMyPayments,
@@ -148,28 +142,14 @@ export function StudentPaymentList() {
         alignment="left"
         as="h3"
       >
-        <Select
-          value={filter.getFilter("status")}
-          onValueChange={(val) =>
-            filter.updateFilter("status", !val || val === "all" ? null : val)
-          }
-        >
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Status">
-              {(val) =>
-                STATUS_OPTIONS.find((opt) => opt.value === val)?.label ||
-                "All Statuses"
-              }
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent align="start">
-            {STATUS_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <FilterSelect
+          filter={filter}
+          filterKey="status"
+          placeholder="Status"
+          options={STATUS_OPTIONS}
+          className="w-40"
+          align="start"
+        />
       </SectionHeading>
 
       {/* Unpaid Pending Course Enrollments */}

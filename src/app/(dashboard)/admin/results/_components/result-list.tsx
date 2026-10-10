@@ -4,15 +4,9 @@ import { Send } from "lucide-react";
 
 import { SectionHeading } from "@/components/common/section-heading";
 import { SearchInput } from "@/components/common/search-input";
+import { FilterSelect } from "@/components/common/filter-select";
 import { DataTable } from "@/components/common/data-table";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useStateFilter } from "@/hooks";
 import { useGetAllResults, usePublishResults } from "@/services";
 import { getErrorMessage } from "@/lib/error";
@@ -96,35 +90,13 @@ export default function ResultList() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <Select
-            value={filter.getFilter("published")}
-            onValueChange={(val) =>
-              filter.updateFilter(
-                "published",
-                !val || val === "all" ? null : val
-              )
-            }
-          >
-            <SelectTrigger className="w-48 cursor-pointer">
-              <SelectValue placeholder="Status">
-                {(val) =>
-                  STATUS_OPTIONS.find((opt) => opt.value === val)?.label ||
-                  "All Statuses"
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              {STATUS_OPTIONS.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  className="cursor-pointer"
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            filter={filter}
+            filterKey="published"
+            placeholder="All Statuses"
+            options={STATUS_OPTIONS}
+            className="w-48"
+          />
         </div>
       </div>
 

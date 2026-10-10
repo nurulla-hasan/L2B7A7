@@ -2,14 +2,8 @@
 
 import { SectionHeading } from "@/components/common/section-heading";
 import { SearchInput } from "@/components/common/search-input";
+import { FilterSelect } from "@/components/common/filter-select";
 import { DataTable } from "@/components/common/data-table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useStateFilter } from "@/hooks";
 import { useGetAllEnrollments, useGetSemesters } from "@/services";
 import { getErrorMessage } from "@/lib/error";
@@ -48,6 +42,11 @@ export default function EnrollmentList() {
   const enrollments = response?.data ?? [];
   const meta = response?.meta;
 
+  const semesterOptions = [
+    { label: "All Semesters", value: "all" },
+    ...semesters.map((s) => ({ label: `${s.name} ${s.year}`, value: s.id })),
+  ];
+
   return (
     <div className="space-y-6">
       <SectionHeading
@@ -70,95 +69,31 @@ export default function EnrollmentList() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Status Filter */}
-          <Select
-            value={filter.getFilter("status")}
-            onValueChange={(val) =>
-              filter.updateFilter("status", !val || val === "all" ? null : val)
-            }
-          >
-            <SelectTrigger className="w-40 cursor-pointer">
-              <SelectValue placeholder="Status">
-                {(val) =>
-                  STATUS_OPTIONS.find((opt) => opt.value === val)?.label ||
-                  "All Statuses"
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              {STATUS_OPTIONS.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  className="cursor-pointer"
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            filter={filter}
+            filterKey="status"
+            placeholder="All Statuses"
+            options={STATUS_OPTIONS}
+            className="w-40"
+          />
 
           {/* Semester Filter */}
-          <Select
-            value={filter.getFilter("semesterId")}
-            onValueChange={(val) =>
-              filter.updateFilter(
-                "semesterId",
-                !val || val === "all" ? null : val
-              )
-            }
-          >
-            <SelectTrigger className="w-40 cursor-pointer">
-              <SelectValue placeholder="Semester">
-                {(val) => {
-                  if (val === "all" || !val) return "All Semesters";
-                  const s = semesters.find((item) => item.id === val);
-                  return s ? `${s.name} ${s.year}` : "Semester";
-                }}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              <SelectItem value="all" className="cursor-pointer">
-                All Semesters
-              </SelectItem>
-              {semesters.map((sem) => (
-                <SelectItem
-                  key={sem.id}
-                  value={sem.id}
-                  className="cursor-pointer"
-                >
-                  {sem.name} {sem.year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            filter={filter}
+            filterKey="semesterId"
+            placeholder="All Semesters"
+            options={semesterOptions}
+            className="w-40"
+          />
 
           {/* Sort By Filter */}
-          <Select
-            value={filter.getFilter("sortBy")}
-            onValueChange={(val) => {
-              if (val) filter.updateFilter("sortBy", val);
-            }}
-          >
-            <SelectTrigger className="min-w-44 cursor-pointer">
-              <SelectValue placeholder="Sort by">
-                {(val) =>
-                  SORT_OPTIONS.find((opt) => opt.value === val)?.label ||
-                  "Newest First"
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              {SORT_OPTIONS.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  className="cursor-pointer"
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            filter={filter}
+            filterKey="sortBy"
+            placeholder="Sort by"
+            options={SORT_OPTIONS}
+            className="min-w-44"
+          />
         </div>
       </div>
 

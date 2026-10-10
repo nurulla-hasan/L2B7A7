@@ -11,6 +11,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "./password-input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface BaseFormInputProps {
   label: string;
@@ -19,6 +26,7 @@ interface BaseFormInputProps {
   autoComplete?: string;
   description?: string;
   disabled?: boolean;
+  options?: { label: string; value: string }[];
   inputMode?:
     | "none"
     | "text"
@@ -58,6 +66,7 @@ function FormInputField({
   autoComplete,
   description,
   disabled,
+  options,
   inputMode,
   maxLength,
   step,
@@ -112,6 +121,38 @@ function FormInputField({
             maxLength={maxLength}
             aria-invalid={isInvalid}
           />
+        ) : type === "select" ? (
+          <Select
+            value={(field.state.value as string) || null}
+            onValueChange={(val) => {
+              field.handleChange(val ?? "");
+            }}
+            disabled={disabled}
+          >
+            <SelectTrigger
+              id={field.name}
+              className="w-full cursor-pointer"
+              aria-invalid={isInvalid}
+            >
+              <SelectValue placeholder={placeholder}>
+                {(val) => {
+                  const found = options?.find((opt) => opt.value === val);
+                  return found ? found.label : val;
+                }}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {options?.map((opt) => (
+                <SelectItem
+                  key={opt.value}
+                  value={opt.value}
+                  className="cursor-pointer"
+                >
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         ) : (
           <Input
             id={field.name}

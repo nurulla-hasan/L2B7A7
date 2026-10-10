@@ -82,8 +82,6 @@ export async function proxy(request: NextRequest) {
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 
-  const isRoot = pathname === "/";
-
   const accessToken = request.cookies.get("accessToken")?.value;
 
   const refreshToken = request.cookies.get("refreshToken")?.value;
@@ -126,12 +124,6 @@ export async function proxy(request: NextRequest) {
     response = NextResponse.redirect(new URL(ROLE_HOME[role], request.url));
   }
 
-  // Root route
-  else if (isRoot) {
-    response = NextResponse.redirect(
-      new URL(role ? ROLE_HOME[role] : "/login", request.url),
-    );
-  }
 
   // Strict role isolation
   else if (role) {

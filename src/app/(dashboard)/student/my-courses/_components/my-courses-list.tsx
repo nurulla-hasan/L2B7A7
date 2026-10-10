@@ -6,13 +6,7 @@ import { PlusCircle } from "lucide-react";
 import { SectionHeading } from "@/components/common/section-heading";
 import { DataTable } from "@/components/common/data-table";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FilterSelect } from "@/components/common/filter-select";
 import { useStateFilter } from "@/hooks";
 import { useGetMyEnrollments } from "@/services";
 import { getErrorMessage } from "@/lib/error";
@@ -50,28 +44,13 @@ export function MyCoursesList() {
         as="h3"
       >
         <div className="flex items-stretch sm:items-center gap-3 w-full sm:w-auto">
-          <Select
-            value={filter.getFilter("status")}
-            onValueChange={(val) =>
-              filter.updateFilter("status", !val || val === "all" ? null : val)
-            }
-          >
-            <SelectTrigger className="w-full sm:w-38">
-              <SelectValue placeholder="Status">
-                {(val) =>
-                  STATUS_OPTIONS.find((opt) => opt.value === val)?.label ||
-                  "All Statuses"
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              {STATUS_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            filter={filter}
+            filterKey="status"
+            placeholder="Status"
+            options={STATUS_OPTIONS}
+            className="w-full sm:w-38"
+          />
 
           <Button render={<Link href="/student/registration" />}>
             <PlusCircle />

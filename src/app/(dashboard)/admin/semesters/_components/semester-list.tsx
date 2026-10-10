@@ -2,14 +2,8 @@
 
 import { SectionHeading } from "@/components/common/section-heading";
 import { SearchInput } from "@/components/common/search-input";
+import { FilterSelect } from "@/components/common/filter-select";
 import { DataTable } from "@/components/common/data-table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useStateFilter } from "@/hooks";
 import { useGetSemesters } from "@/services";
 import { getErrorMessage } from "@/lib/error";
@@ -65,56 +59,22 @@ export default function SemestersList() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Year Filter */}
-          <Select
-            value={filter.getFilter("year")}
-            onValueChange={(val) =>
-              filter.updateFilter(
-                "year",
-                !val || val === "all" ? null : Number(val)
-              )
-            }
-          >
-            <SelectTrigger className="w-32.5 cursor-pointer">
-              <SelectValue placeholder="Year">
-                {(val) => (val === "all" || !val ? "All Years" : val)}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              {YEAR_OPTIONS.map((yr) => (
-                <SelectItem key={yr} value={yr} className="cursor-pointer">
-                  {yr === "all" ? "All Years" : yr}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            filter={filter}
+            filterKey="year"
+            placeholder="All Years"
+            options={YEAR_OPTIONS}
+            className="w-32.5"
+          />
 
           {/* Sort By Filter */}
-          <Select
-            value={filter.getFilter("sortBy")}
-            onValueChange={(val) => {
-              if (val) filter.updateFilter("sortBy", val);
-            }}
-          >
-            <SelectTrigger className="min-w-46 cursor-pointer">
-              <SelectValue placeholder="Sort by">
-                {(val) =>
-                  SORT_OPTIONS.find((opt) => opt.value === val)?.label ||
-                  "Newest First"
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              {SORT_OPTIONS.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  className="cursor-pointer"
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            filter={filter}
+            filterKey="sortBy"
+            placeholder="Sort by"
+            options={SORT_OPTIONS}
+            className="min-w-46"
+          />
         </div>
       </div>
 

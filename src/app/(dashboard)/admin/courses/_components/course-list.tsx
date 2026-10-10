@@ -2,14 +2,8 @@
 
 import { SectionHeading } from "@/components/common/section-heading";
 import { SearchInput } from "@/components/common/search-input";
+import { FilterSelect } from "@/components/common/filter-select";
 import { DataTable } from "@/components/common/data-table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useStateFilter } from "@/hooks";
 import { useGetCourses } from "@/services";
 import { getErrorMessage } from "@/lib/error";
@@ -17,7 +11,16 @@ import type { CourseSortBy } from "@/types";
 import { courseColumns } from "./course-column";
 import { CourseModal } from "./course-modal";
 
-const CREDIT_OPTIONS = ["all", "0.5", "1", "1.5", "2", "3", "4", "6"];
+const CREDIT_OPTIONS = [
+  { label: "All Credits", value: "all" },
+  { label: "0.5 Credits", value: "0.5" },
+  { label: "1 Credit", value: "1" },
+  { label: "1.5 Credits", value: "1.5" },
+  { label: "2 Credits", value: "2" },
+  { label: "3 Credits", value: "3" },
+  { label: "4 Credits", value: "4" },
+  { label: "6 Credits", value: "6" },
+];
 
 const SORT_OPTIONS: { label: string; value: CourseSortBy }[] = [
   { label: "Newest First", value: "newest" },
@@ -69,58 +72,22 @@ export default function CoursesList() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Credits Filter */}
-          <Select
-            value={filter.getFilter("credits")}
-            onValueChange={(val) =>
-              filter.updateFilter(
-                "credits",
-                !val || val === "all" ? null : Number(val)
-              )
-            }
-          >
-            <SelectTrigger className="w-36 cursor-pointer">
-              <SelectValue placeholder="Credits">
-                {(val) =>
-                  val === "all" || !val ? "All Credits" : `${val} Credits`
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              {CREDIT_OPTIONS.map((cr) => (
-                <SelectItem key={cr} value={cr} className="cursor-pointer">
-                  {cr === "all" ? "All Credits" : `${cr} Credits`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            filter={filter}
+            filterKey="credits"
+            placeholder="All Credits"
+            options={CREDIT_OPTIONS}
+            className="w-36"
+          />
 
           {/* Sort By Filter */}
-          <Select
-            value={filter.getFilter("sortBy")}
-            onValueChange={(val) => {
-              if (val) filter.updateFilter("sortBy", val);
-            }}
-          >
-            <SelectTrigger className="min-w-48 cursor-pointer">
-              <SelectValue placeholder="Sort by">
-                {(val) =>
-                  SORT_OPTIONS.find((opt) => opt.value === val)?.label ||
-                  "Newest First"
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              {SORT_OPTIONS.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  className="cursor-pointer"
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterSelect
+            filter={filter}
+            filterKey="sortBy"
+            placeholder="Sort by"
+            options={SORT_OPTIONS}
+            className="min-w-48"
+          />
         </div>
       </div>
 
